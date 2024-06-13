@@ -1,0 +1,1727 @@
+// .dockerignore
+node_modules
+dist
+npm-debug.log
+Dockerfile
+.dockerignore
+
+
+// .env
+POSTGRES_USER=admin
+POSTGRES_PASSWORD=admin
+POSTGRES_DB=assessment_db
+DB_HOST=localhost
+DB_PORT=5432
+REDIS_HOST=localhost
+REDIS_PORT=6379
+
+// .eslintignore
+node_modules
+dist
+
+
+// .eslintrc.json
+{
+  "env": {
+    "node": true,
+    "es2021": true,
+    "jest": true
+  },
+  "extends": [
+    "eslint:recommended",
+    "plugin:@typescript-eslint/recommended"
+  ],
+  "parser": "@typescript-eslint/parser",
+  "parserOptions": {
+    "ecmaVersion": 12,
+    "sourceType": "module"
+  },
+  "plugins": [
+    "@typescript-eslint"
+  ],
+  "rules": {
+    "semi": [
+      "error",
+      "always"
+    ],
+    "quotes": [
+      "error",
+      "single"
+    ],
+    "@typescript-eslint/no-explicit-any": "off"
+  }
+}
+
+// docker-compose.yml
+version: '3.8'
+
+services:
+  db:
+    image: postgres:13
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    ports:
+      - '5432:5432'
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+  redis:
+    image: redis:6.2
+    ports:
+      - '6379:6379'
+  # app:
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile.dev
+  #   ports:
+  #     - '3000'
+  #   volumes:
+  #     - .:/app
+  #     - /app/node_modules
+  #   environment:
+  #     - CHOKIDAR_USEPOLLING=true
+  #     - POSTGRES_USER=${POSTGRES_USER}
+  #     - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+  #     - POSTGRES_DB=${POSTGRES_DB}
+  #     - DB_HOST=db
+  #     - DB_PORT=5432
+  #   depends_on:
+  #     - db
+  #   command: npm run dev
+  # nginx:
+  #   image: nginx:latest
+  #   ports:
+  #     - "8080:80"
+  #   volumes:
+  #     - ./nginx.conf:/etc/nginx/nginx.conf
+  #   depends_on:
+  #     - app
+volumes:
+  pgdata:
+
+
+// Dockerfile.dev
+# Use the official Node.js image as a base
+FROM node:18-alpine
+
+# Create and set the working directory
+WORKDIR /app
+
+# Copy package.json and package-lock.json
+COPY package*.json ./
+
+# Install dependencies
+RUN npm install
+
+# Install nodemon globally for development
+RUN npm install -g nodemon tsx
+
+# Copy the rest of the application code
+COPY . .
+
+# Build the project
+RUN npm run build
+
+# Expose the application port
+EXPOSE 3000
+
+# Start the application using nodemon for development
+CMD ["sh", "-c", "npm run migrate && npm run dev"]
+
+
+// jest.config.ts
+module.exports = {
+  preset: 'ts-jest',
+  testEnvironment: 'node',
+  setupFiles: ['dotenv/config'],
+  modulePathIgnorePatterns: ['<rootDir>/dist/'], // Ignore built files
+};
+
+// listFilesAndContents.ts
+import fs from 'fs';
+import path from 'path';
+
+const ROOT_DIR = '.';
+const OUTPUT_FILE = 'projectFiles.txt';
+const IGNORE_DIRS = ['node_modules', 'dist'];
+const IGNORE_FILES = ['package-lock.json'];
+
+function listFilesAndContents(dir: string): string[] {
+  const results: string[] = [];
+
+  function readDir(dir: string) {
+    fs.readdirSync(dir).forEach((file) => {
+      const filePath = path.join(dir, file);
+      const stat = fs.statSync(filePath);
+
+      if (stat.isDirectory() && !IGNORE_DIRS.includes(file)) {
+        readDir(filePath);
+      } else if (stat.isFile() && !IGNORE_FILES.includes(file)) {
+        const fileContent = fs.readFileSync(filePath, 'utf-8');
+        results.push(`// ${filePath}\n${fileContent}\n`);
+      }
+    });
+  }
+
+  readDir(dir);
+  return results;
+}
+
+const output = listFilesAndContents(ROOT_DIR).join('\n');
+fs.writeFileSync(OUTPUT_FILE, output);
+
+console.log(`File list and contents written to ${OUTPUT_FILE}`);
+
+
+// nginx.conf
+events {}
+
+http {
+    upstream backend {
+        server app:3000;
+        server app:3001;
+        server app:3002;
+    }
+
+    server {
+        listen 80;
+
+        location / {
+            proxy_pass http://backend;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+        }
+    }
+}
+
+
+// nodemon.json
+{
+  "watch": [
+    "src"
+  ],
+  "ext": "ts",
+  "exec": "tsx src/index.ts"
+}
+
+// package.json
+{
+  "name": "backend",
+  "version": "1.0.0",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node dist/index.js",
+    "dev": "nodemon --watch src --exec tsx src/index.ts",
+    "build": "tsc",
+    "lint": "eslint . --ext .ts",
+    "seed": "tsx src/scripts/seed.ts",
+    "test": "jest --verbose",
+    "test:watch": "jest --watch",
+    "typeorm": "tsx ./node_modules/typeorm/cli",
+    "migrate": "npm run build && tsx ./src/infrastructure/database/migrate.ts"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
+    "@types/chance": "^1.1.6",
+    "@types/compression": "^1.7.5",
+    "@types/cookie-parser": "^1.4.7",
+    "@types/cors": "^2.8.17",
+    "@types/express": "^4.17.21",
+    "@types/jest": "^29.5.12",
+    "@types/jsonwebtoken": "^9.0.6",
+    "@types/morgan": "^1.9.9",
+    "@types/node": "^20.14.2",
+    "@types/swagger-jsdoc": "^6.0.4",
+    "@types/swagger-ui-express": "^4.1.6",
+    "@typescript-eslint/eslint-plugin": "^7.13.0",
+    "@typescript-eslint/parser": "^7.13.0",
+    "eslint": "^8.57.0",
+    "jest": "^29.7.0",
+    "nodemon": "^3.1.3",
+    "ts-jest": "^29.1.4",
+    "tsx": "^4.15.2",
+    "typescript": "^5.4.5"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "chance": "^1.1.11",
+    "class-validator": "^0.14.1",
+    "compression": "^1.7.4",
+    "cookie-parser": "^1.4.6",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "express-async-errors": "^3.1.1",
+    "express-rate-limit": "^7.3.1",
+    "express-session": "^1.18.0",
+    "helmet": "^7.1.0",
+    "jest-mock-extended": "^3.0.7",
+    "jsonwebtoken": "^9.0.2",
+    "morgan": "^1.10.0",
+    "pg": "^8.12.0",
+    "redis": "^4.6.14",
+    "reflect-metadata": "^0.2.2",
+    "swagger-jsdoc": "^6.2.8",
+    "swagger-ui-express": "^5.0.1",
+    "ts-node": "^10.9.2",
+    "typeorm": "^0.3.20"
+  }
+}
+
+// README.md
+# Customer Management System
+
+## Project Overview
+
+This project is a Customer Management System built using Node.js, Express, TypeScript, and PostgreSQL. It follows Domain-Driven Design (DDD) principles to create a modular and maintainable architecture. The system is designed to handle a significant number of concurrent requests efficiently by implementing various optimizations such as caching, compression, rate limiting, and database indexing. Additionally, it includes Docker support for easy deployment and scalability.
+
+## Features
+
+- **Domain-Driven Design (DDD)**: The project is structured according to DDD principles, ensuring a clear separation of concerns and a modular architecture.
+- **Authentication**: User registration, login, logout, and session management using JWT.
+- **Customer Management**: CRUD operations for managing customer data.
+- **API Documentation**: Comprehensive API documentation using Swagger.
+
+## Optimizations for High Concurrency
+
+1. **Caching**: Redis is used to cache frequently accessed data, reducing database load and improving response times.
+2. **Compression**: Responses are compressed using the `compression` middleware to reduce payload size and improve network performance.
+3. **Rate Limiting**: The `express-rate-limit` middleware is used to prevent abuse by limiting the number of requests a client can make in a given timeframe.
+4. **Docker Replicas**: Docker and Docker Compose are used to create containerized environments with support for running multiple replicas for load balancing.
+5. **Async Operations**: Asynchronous operations and non-blocking I/O are used to handle multiple requests concurrently.
+6. **Database Indexing**: Database tables are indexed to speed up query performance and ensure efficient data retrieval.
+
+## Getting Started
+
+### Prerequisites
+
+- Node.js
+- npm or yarn
+- Docker (optional)
+
+### Running the Project Locally
+
+1. **Clone the repository**:
+   ```bash
+   git clone https://github.com/your-username/customer-management-system.git
+   cd customer-management-system
+   ```
+   
+2. **Install Depnedencies**:
+    ```
+    npm install
+    ```
+3. **Set up environment variables**:
+    Create a .env file in the root directory and add the following environment variables:
+    ```bash
+    POSTGRES_USER=admin
+    POSTGRES_PASSWORD=admin
+    POSTGRES_DB=assessment_db
+    DB_HOST=localhost
+    DB_PORT=5432
+    REDIS_HOST=localhost
+    REDIS_PORT=6379
+    ```
+4. **Start the PostgreSQL and Redis servers**:
+Make sure you have PostgreSQL and Redis running on your local machine. You can use Docker to run them if you prefer:
+  ```bash
+  docker run --name postgres -e POSTGRES_USER=admin -e POSTGRES_PASSWORD=admin -e POSTGRES_DB=assessment_db -p 5432:5432 -d postgres:13
+  docker run --name redis -p 6379:6379 -d redis:6.2
+```
+5. **Run database migrations**:
+    ```bash
+    npm run migrate
+    ```
+6. **Seed the database**:
+    ```bash
+    npm run seed
+    ```
+7. **Start the application**:
+    ```bash
+    npm run dev
+    ```
+8. **Access the API documentation:**:
+    Open your browser and navigate to http://localhost:3000/api-docs to view the Swagger documentation.
+
+### Running the Project with Docker
+
+1. **Clone the repository**:
+    ```bash
+    git clone https://github.com/your-username/CMS-ASSESSMENT.git
+    cd CMS-ASSESSMENT
+    ```
+2. **Set up environment variables**:
+  Create a .env file in the root directory and add the following environment variables:
+    ```bash
+    POSTGRES_USER=admin
+    POSTGRES_PASSWORD=admin
+    POSTGRES_DB=assessment_db
+    DB_HOST=db
+    DB_PORT=5432
+    REDIS_HOST=redis
+    REDIS_PORT=6379
+    ```
+3. **Build and start the Docker containers**:
+  Create a .env file in the root directory and add the following environment variables:
+    ```bash
+    docker-compose up --build
+    ```
+4. **Run database migrations**:
+    ```bash
+    docker-compose exec app npm run migrate
+    ```
+5. **Seed the database**:
+    ```bash
+   docker-compose exec app npm run seed
+    ```
+6. **Access the application**:
+   The application will be running at http://localhost:8080.
+7. **Access the API documentation**:
+   Open your browser and navigate to http://localhost:8080/api-docs to view the Swagger documentation.
+
+### Project Structure
+The project follows a DDD structure with separate layers for domain, application, infrastructure, and shared components.
+- src/domain: Contains domain entities, value objects, and repository interfaces.
+- src/application: Contains service classes that implement business logic.
+- src/infrastructure: Contains database entities, repository implementations, and HTTP controllers.
+- src/shared: Contains shared utilities, middlewares, and error handling.
+
+### API Documentation
+
+The API is documented using Swagger. You can access the documentation at http://localhost:8080/api-docs when running with Docker and Nginx, or at http://localhost:3000/api-docs when running locally. The documentation provides detailed information about each endpoint, including request parameters, request body, and response formats.
+
+
+### Contact
+For any questions or inquiries, please contact yazan.ali.dev@gmail.com.
+
+
+// src\application\AuthService.ts
+import jwt, { JwtPayload } from 'jsonwebtoken';
+import bcrypt from 'bcryptjs';
+import { IUserRepository } from '../domain/IUserRepository';
+import { User } from '../domain/User';
+import { CreateUserDto } from '../domain/dtos/CreateUserDto';
+import { AuthenticationError } from '../shared/errors/AuthenticationError';
+
+const secret = 'development_secret';
+
+export class AuthService {
+  constructor(private userRepository: IUserRepository) { }
+
+  static async hashPassword(password: string): Promise<string> {
+    return bcrypt.hash(password, 10);
+  }
+
+  static async comparePassword(password: string, hash: string): Promise<boolean> {
+    return bcrypt.compare(password, hash);
+  }
+
+  static generateToken(user: { id: number; email: string }): string {
+    return jwt.sign({ id: user.id, email: user.email }, secret, { expiresIn: '1h' });
+  }
+
+  static verifyToken(token: string): string | JwtPayload {
+    return jwt.verify(token, secret);
+  }
+
+  async register(createUserDto: CreateUserDto): Promise<User> {
+    const existingUser = await this.userRepository.findByEmail(createUserDto.email);
+    if (existingUser) {
+      throw new Error('User already exists');
+    }
+
+    const hashedPassword = await AuthService.hashPassword(createUserDto.password);
+    const user = new User();
+    user.email = createUserDto.email;
+    user.password = hashedPassword;
+
+    return this.userRepository.save(user);
+  }
+
+  async login(email: string, password: string): Promise<string> {
+    const user = await this.userRepository.findByEmail(email);
+    if (!user || !(await AuthService.comparePassword(password, user.password))) {
+      throw new AuthenticationError();
+    }
+
+    return AuthService.generateToken({ id: user.id, email: user.email });
+  }
+}
+
+
+// src\application\CustomerService.ts
+import { ICustomerRepository } from '../domain/ICustomerRepository';
+import { Customer } from '../domain/Customer';
+
+export class CustomerService {
+  constructor(private customerRepository: ICustomerRepository) { }
+
+  async getAllCustomers(options?: { page?: number; limit?: number }): Promise<Customer[]> {
+    return this.customerRepository.findAll(options);
+  }
+
+  async getCustomerById(id: number): Promise<Customer | null> {
+    return this.customerRepository.findById(id);
+  }
+
+  async createCustomer(data: Omit<Customer, 'id'>): Promise<Customer> {
+    const customer = new Customer(0, data.name, data.email, data.address);
+    return this.customerRepository.save(customer);
+  }
+
+  async updateCustomer(id: number, data: Omit<Customer, 'id'>): Promise<Customer> {
+    const customer = new Customer(id, data.name, data.email, data.address);
+    return this.customerRepository.update(customer);
+  }
+
+  async deleteCustomer(id: number): Promise<void> {
+    return this.customerRepository.delete(id);
+  }
+}
+
+
+// src\application\__tests__\AuthService.test.ts
+// src\application\__tests__\AuthService.test.ts
+import { AuthService } from '../AuthService';
+import { UserRepository } from '../../infrastructure/repositories/UserRepository';
+import { User } from '../../domain/User';
+import { Repository } from 'typeorm';
+import { CreateUserDto } from '../../domain/dtos/CreateUserDto';
+import { AuthenticationError } from '../../shared/errors/AuthenticationError';
+
+jest.mock('../../infrastructure/repositories/UserRepository');
+
+describe('AuthService', () => {
+  let authService: AuthService;
+  let userRepository: jest.Mocked<UserRepository>;
+  let ormRepository: jest.Mocked<Repository<User>>;
+
+  beforeEach(() => {
+    ormRepository = {
+      findOne: jest.fn(),
+      save: jest.fn(),
+    } as any;
+
+    userRepository = new UserRepository(ormRepository) as jest.Mocked<UserRepository>;
+    authService = new AuthService(userRepository);
+  });
+
+  it('should register a new user', async () => {
+    const createUserDto: CreateUserDto = {
+      email: 'test@example.com',
+      password: 'password123',
+    };
+    const newUser = new User();
+    newUser.id = 1;
+    newUser.email = createUserDto.email;
+    newUser.password = await AuthService.hashPassword(createUserDto.password);
+
+    userRepository.findByEmail.mockResolvedValue(null);
+    userRepository.save.mockResolvedValue(newUser);
+
+    const result = await authService.register(createUserDto);
+    expect(result).toEqual(newUser);
+    expect(userRepository.findByEmail).toHaveBeenCalledWith(createUserDto.email);
+    expect(userRepository.save).toHaveBeenCalledWith(expect.objectContaining({ email: createUserDto.email }));
+  });
+
+  it('should not register an existing user', async () => {
+    const createUserDto: CreateUserDto = {
+      email: 'test@example.com',
+      password: 'password123',
+    };
+    const existingUser = new User();
+    existingUser.id = 1;
+    existingUser.email = createUserDto.email;
+    existingUser.password = 'hashed_password';
+
+    userRepository.findByEmail.mockResolvedValue(existingUser);
+
+    await expect(authService.register(createUserDto)).rejects.toThrow('User already exists');
+    expect(userRepository.findByEmail).toHaveBeenCalledWith(createUserDto.email);
+    expect(userRepository.save).not.toHaveBeenCalled();
+  });
+
+  it('should login a user', async () => {
+    const email = 'test@example.com';
+    const password = 'password123';
+    const user = new User();
+    user.id = 1;
+    user.email = email;
+    user.password = await AuthService.hashPassword(password);
+
+    userRepository.findByEmail.mockResolvedValue(user);
+
+    const token = await authService.login(email, password);
+    expect(token).toBeDefined();
+  });
+
+  it('should not login with invalid credentials', async () => {
+    const email = 'test@example.com';
+    const password = 'password123';
+
+    userRepository.findByEmail.mockResolvedValue(null);
+
+    await expect(authService.login(email, password)).rejects.toThrow(AuthenticationError);
+  });
+});
+
+
+
+// src\application\__tests__\CustomerService.test.ts
+import { CustomerService } from '../CustomerService';
+import { CustomerRepository } from '../../infrastructure/repositories/CustomerRepository';
+import { Customer } from '../../domain/Customer';
+import { Repository } from 'typeorm';
+
+jest.mock('../../infrastructure/repositories/CustomerRepository');
+
+describe('CustomerService', () => {
+  let customerService: CustomerService;
+  let customerRepository: jest.Mocked<CustomerRepository>;
+  let ormRepository: jest.Mocked<Repository<Customer>>;
+
+  beforeEach(() => {
+    ormRepository = {
+      find: jest.fn(),
+      findOneBy: jest.fn(),
+      save: jest.fn(),
+      delete: jest.fn(),
+    } as any;
+
+    customerRepository = new CustomerRepository(ormRepository) as jest.Mocked<CustomerRepository>;
+    customerService = new CustomerService(customerRepository);
+  });
+
+  it('should create a customer', async () => {
+    const customerData = { name: 'John Doe', email: 'john@example.com', address: '123 Main St' };
+    const createdCustomer = new Customer(1, customerData.name, customerData.email, customerData.address);
+
+    customerRepository.save.mockResolvedValue(createdCustomer);  // Update mock method
+    const customer = await customerService.createCustomer(customerData);
+    console.log('customer', customer);
+
+    expect(customer).toEqual(createdCustomer);
+    expect(customerRepository.save).toHaveBeenCalledWith(expect.objectContaining(customerData));
+  });
+
+  it('should get all customers', async () => {
+    const customers = [
+      new Customer(1, 'John Doe', 'john@example.com', '123 Main St'),
+      new Customer(2, 'Jane Doe', 'jane@example.com', '456 Elm St'),
+    ];
+
+    customerRepository.findAll.mockResolvedValue(customers);  // Update mock method
+    const result = await customerService.getAllCustomers();
+    console.log('result', result);
+
+    expect(result).toEqual(customers);
+    expect(customerRepository.findAll).toHaveBeenCalled();
+  });
+
+  it('should get customer by id', async () => {
+    const customer = new Customer(1, 'John Doe', 'john@example.com', '123 Main St');
+
+    customerRepository.findById.mockResolvedValue(customer);  // Update mock method
+    const result = await customerService.getCustomerById(1);
+
+    expect(result).toEqual(customer);
+    expect(customerRepository.findById).toHaveBeenCalledWith(1);
+  });
+
+  it('should update a customer', async () => {
+    const customerData = { id: 1, name: 'John Doe', email: 'john@example.com', address: '123 Main St' };
+    const updatedCustomer = new Customer(customerData.id, customerData.name, customerData.email, customerData.address);
+
+    customerRepository.update.mockResolvedValue(updatedCustomer);  // Update mock method
+    const result = await customerService.updateCustomer(customerData.id, customerData);
+
+    expect(result).toEqual(updatedCustomer);
+    expect(customerRepository.update).toHaveBeenCalledWith(expect.objectContaining(customerData));
+  });
+
+  it('should delete a customer', async () => {
+    customerRepository.delete.mockResolvedValue();  // Update mock method
+    await customerService.deleteCustomer(1);
+
+    expect(customerRepository.delete).toHaveBeenCalledWith(1);
+  });
+});
+
+
+// src\domain\Customer.ts
+export class Customer {
+  constructor(
+    public id: number,
+    public name: string,
+    public email: string,
+    public address: string
+  ) { }
+}
+
+
+// src\domain\dtos\CreateCustomerDto.ts
+import { IsEmail, IsNotEmpty } from 'class-validator';
+
+export class CreateCustomerDto {
+  @IsNotEmpty()
+  name!: string;
+
+  @IsEmail()
+  email!: string;
+
+  @IsNotEmpty()
+  address!: string;
+}
+
+
+// src\domain\dtos\CreateUserDto.ts
+import { IsEmail, IsNotEmpty, Length } from 'class-validator';
+
+export class CreateUserDto {
+  @IsEmail()
+  @IsNotEmpty()
+  email!: string;
+
+  @IsNotEmpty()
+  @Length(6, 20)
+  password!: string;
+}
+
+
+// src\domain\ICustomerRepository.ts
+import { Customer } from './Customer';
+
+export interface ICustomerRepository {
+  findAll(options?: { page?: number; limit?: number }): Promise<Customer[]>;
+  findById(id: number): Promise<Customer | null>;
+  save(customer: Customer): Promise<Customer>;
+  update(customer: Customer): Promise<Customer>;
+  delete(id: number): Promise<void>;
+}
+
+
+// src\domain\IUserRepository.ts
+import { User } from './User';
+
+export interface IUserRepository {
+  findByEmail(email: string): Promise<User | null>;
+  save(user: User): Promise<User>;
+}
+
+
+// src\domain\User.ts
+export class User {
+  id!: number;
+  email!: string;
+  password!: string;
+}
+
+// src\index.ts
+import 'reflect-metadata';
+import 'express-async-errors';
+import express from 'express';
+import rateLimit from 'express-rate-limit';
+import cookieParser from 'cookie-parser';
+import helmet from 'helmet';
+import morgan from 'morgan';
+import cors from 'cors';
+import compression from 'compression';
+import { AppDataSource } from './infrastructure/database/ormconfig';
+import customerRoutes from './infrastructure/http/routes/customerRoutes';
+import authRoutes from './infrastructure/http/routes/authRoutes';
+import swaggerConfig from './swagger';
+import { errorHandler } from './shared/middleware/errorHandler';
+
+const app = express();
+
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 100,
+});
+
+app.use(helmet());
+app.use(limiter);
+app.use(compression());
+app.use(cors());
+app.use(morgan('combined'));
+app.use(express.json());
+app.use(cookieParser());
+
+swaggerConfig(app);
+app.use('/customers', customerRoutes);
+app.use('/auth', authRoutes);
+
+app.use(errorHandler);
+
+const PORT = process.env.PORT || 3000;
+
+AppDataSource.initialize()
+  .then(() => {
+    app.listen(PORT, () => {
+      console.log(`Server is running on port ${PORT}`);
+    });
+  })
+  .catch((error) => console.log(error));
+
+
+// src\infrastructure\database\migrate.ts
+import { AppDataSource } from './ormconfig';
+
+AppDataSource.initialize()
+  .then(async () => {
+    await AppDataSource.runMigrations();
+    console.log('Migrations are successfully executed.');
+  })
+  .catch(error => {
+    console.error('Error during migration run:', error);
+  });
+
+
+// src\infrastructure\database\ormconfig.ts
+import { DataSource } from 'typeorm';
+import { Customer } from '../repositories/CustomerEntity';
+import { User } from '../repositories/UserEntity';
+import dotenv from 'dotenv';
+
+dotenv.config();
+
+console.log('process.env.POSTGRES_USER', process.env.POSTGRES_USER);
+console.log('process.env.POSTGRES_PASSWORD', process.env.POSTGRES_PASSWORD);
+console.log('process.env.POSTGRES_DB', process.env.POSTGRES_DB);
+
+export const AppDataSource = new DataSource({
+  migrationsTableName: 'migrations',
+  type: 'postgres',
+  host: process.env.DB_HOST || 'db',
+  port: parseInt(process.env.DB_PORT || '5432', 10),
+  username: process.env.POSTGRES_USER,
+  password: process.env.POSTGRES_PASSWORD,
+  database: process.env.POSTGRES_DB,
+  entities: [Customer, User],
+  migrations: ['src/migration/**/*.ts'],
+  synchronize: true,
+  logging: false,
+  extra: {
+    max: 20, // Maximum number of connections in the pool
+    min: 2,  // Minimum number of connections in the pool
+    idleTimeoutMillis: 30000, // How long a client is allowed to remain idle before being closed
+  }
+});
+
+
+// src\infrastructure\http\controllers\AuthController.ts
+import { Request, Response } from 'express';
+import { AuthService } from '../../../application/AuthService';
+import { AppDataSource } from '../../database/ormconfig';
+import { User } from '../../repositories/UserEntity';
+import { UserRepository } from '../../repositories/UserRepository';
+import { CreateUserDto } from '../../../domain/dtos/CreateUserDto';
+import { validate } from 'class-validator';
+import { RequestValidationError } from '../../../shared/errors/RequestValidationError';
+
+const userRepository = new UserRepository(AppDataSource.getRepository(User));
+const authService = new AuthService(userRepository);
+
+export class AuthController {
+  async register(req: Request, res: Response): Promise<void> {
+    const createUserDto = new CreateUserDto();
+    Object.assign(createUserDto, req.body);
+
+    const errors = await validate(createUserDto);
+    if (errors.length > 0) {
+      throw new RequestValidationError(errors);
+    }
+
+    const user = await authService.register(createUserDto);
+    res.status(201).json({ message: 'User registered successfully', user });
+  }
+
+  async login(req: Request, res: Response): Promise<void> {
+    const { email, password } = req.body;
+
+    const token = await authService.login(email, password);
+    res.cookie('token', token, { httpOnly: true });
+    res.json({ message: 'Logged in successfully' });
+  }
+
+  async logout(req: Request, res: Response): Promise<void> {
+    res.clearCookie('token');
+    res.json({ message: 'Logged out successfully' });
+  }
+
+  async me(req: Request, res: Response): Promise<void> {
+    res.json(req.user);
+  }
+}
+
+
+// src\infrastructure\http\controllers\CustomerController.ts
+import { Request, Response } from 'express';
+import { CustomerService } from '../../../application/CustomerService';
+import { CreateCustomerDto } from '../../../domain/dtos/CreateCustomerDto';
+import { validate } from 'class-validator';
+import { RequestValidationError } from '../../../shared/errors/RequestValidationError';
+import { NotFoundError } from '../../../shared/errors/NotFoundError';
+
+export class CustomerController {
+  constructor(private customerService: CustomerService) { }
+
+  async getAll(req: Request, res: Response): Promise<void> {
+    const { page = 1, limit = 10 } = req.query;
+    const customers = await this.customerService.getAllCustomers({ page: Number(page), limit: Number(limit) });
+    res.json(customers);
+  }
+
+  async getById(req: Request, res: Response): Promise<void> {
+    const customer = await this.customerService.getCustomerById(parseInt(req.params.id, 10));
+    if (!customer) {
+      throw new NotFoundError('Customer not found');
+    }
+    res.json(customer);
+  }
+
+  async create(req: Request, res: Response): Promise<void> {
+    const createCustomerDto = new CreateCustomerDto();
+    Object.assign(createCustomerDto, req.body);
+
+    const errors = await validate(createCustomerDto);
+    if (errors.length > 0) {
+      throw new RequestValidationError(errors);
+    }
+
+    const customer = await this.customerService.createCustomer(createCustomerDto);
+    res.status(201).json(customer);
+  }
+
+  async update(req: Request, res: Response): Promise<void> {
+    const updateCustomerDto = new CreateCustomerDto();
+    Object.assign(updateCustomerDto, req.body);
+
+    const errors = await validate(updateCustomerDto);
+    if (errors.length > 0) {
+      throw new RequestValidationError(errors);
+    }
+
+    const customer = await this.customerService.updateCustomer(parseInt(req.params.id, 10), updateCustomerDto);
+    if (!customer) {
+      throw new NotFoundError('Customer not found');
+    }
+    res.json(customer);
+  }
+
+  async delete(req: Request, res: Response): Promise<void> {
+    const customer = await this.customerService.getCustomerById(parseInt(req.params.id, 10));
+    if (!customer) {
+      throw new NotFoundError('Customer not found');
+    }
+    await this.customerService.deleteCustomer(parseInt(req.params.id, 10));
+    res.status(204).send();
+  }
+}
+
+
+// src\infrastructure\http\middleware\authMiddleware.ts
+import { Request, Response, NextFunction } from 'express';
+import jwt from 'jsonwebtoken';
+import { AuthenticationError } from '../../../shared/errors/AuthenticationError';
+
+const secret = 'development_secret';
+
+export const authenticateJWT = (req: Request, res: Response, next: NextFunction) => {
+  const token = req.cookies.token || req.headers.authorization?.split(' ')[1];
+
+  if (token) {
+    jwt.verify(token, secret, (err: any, user: any) => {
+      if (err) {
+        console.log(err);
+
+        return res.sendStatus(403);
+      }
+      req.user = user;
+      next();
+    });
+  } else {
+    throw new AuthenticationError('Unauthenticated, Please login and try again.');
+  }
+};
+
+
+// src\infrastructure\http\routes\authRoutes.ts
+import { Router } from 'express';
+import { AuthController } from '../controllers/AuthController';
+import { authenticateJWT } from '../middleware/authMiddleware';
+
+const router = Router();
+const authController = new AuthController();
+
+router.post('/register', authController.register.bind(authController));
+router.post('/login', authController.login.bind(authController));
+router.post('/logout', authenticateJWT, authController.logout.bind(authController));
+router.get('/me', authenticateJWT, authController.me.bind(authController));
+
+export default router;
+
+
+// src\infrastructure\http\routes\customerRoutes.ts
+import { Router } from 'express';
+import { CustomerController } from '../controllers/CustomerController';
+import { CustomerService } from '../../../application/CustomerService';
+import { CustomerRepository } from '../../repositories/CustomerRepository';
+import { authenticateJWT } from '../middleware/authMiddleware';
+import { cacheMiddleware } from '../../../shared/utils/cacheMiddleware';
+import { AppDataSource } from '../../database/ormconfig';
+import { Customer } from '../../repositories/CustomerEntity';
+
+const router = Router();
+
+const customerRepository = new CustomerRepository(AppDataSource.getRepository(Customer));
+const customerService = new CustomerService(customerRepository);
+const customerController = new CustomerController(customerService);
+
+router.get('/', authenticateJWT, cacheMiddleware, customerController.getAll.bind(customerController));
+router.get('/:id', authenticateJWT, cacheMiddleware, customerController.getById.bind(customerController));
+router.post('/', authenticateJWT, customerController.create.bind(customerController));
+router.put('/:id', authenticateJWT, customerController.update.bind(customerController));
+router.delete('/:id', authenticateJWT, customerController.delete.bind(customerController));
+
+export default router;
+
+
+// src\infrastructure\http\__tests__\AuthController.test.ts
+import { AuthController } from '../controllers/AuthController';
+import { AuthService } from '../../../application/AuthService';
+import { UserRepository } from '../../repositories/UserRepository';
+import { User } from '../../repositories/UserEntity';
+import { AppDataSource } from '../../database/ormconfig';
+import { Request, Response } from 'express';
+
+jest.mock('../../../application/AuthService');
+jest.mock('../../repositories/UserRepository');
+jest.mock('../../database/ormconfig');
+
+describe('AuthController', () => {
+  let authController: AuthController;
+  let authService: jest.Mocked<AuthService>;
+  let req: Partial<Request>;
+  let res: Partial<Response>;
+
+  beforeEach(() => {
+    const userRepository = new UserRepository(AppDataSource.getRepository(User));
+    authService = new AuthService(userRepository) as jest.Mocked<AuthService>;
+    authController = new AuthController();
+
+    req = {
+      body: {},
+      cookies: {},
+    };
+
+    res = {
+      status: jest.fn().mockReturnThis(),
+      json: jest.fn(),
+      cookie: jest.fn(),
+      clearCookie: jest.fn(),
+    };
+
+    // Mock the authService methods
+    authService.register = jest.fn();
+    authService.login = jest.fn();
+  });
+
+
+  it('should logout a user', async () => {
+    await authController.logout(req as Request, res as Response);
+
+    expect(res.clearCookie).toHaveBeenCalledWith('token');
+    expect(res.json).toHaveBeenCalledWith({ message: 'Logged out successfully' });
+  });
+
+  it('should get the current user', async () => {
+    req.user = { id: 1, email: 'test@example.com' };
+
+    await authController.me(req as Request, res as Response);
+
+    expect(res.json).toHaveBeenCalledWith(req.user);
+  });
+});
+
+
+// src\infrastructure\http\__tests__\CustomerController.test.ts
+// src/infrastructure/http/__tests__/CustomerController.test.ts
+import { CustomerController } from '../controllers/CustomerController';
+import { CustomerService } from '../../../application/CustomerService';
+import { CustomerRepository } from '../../repositories/CustomerRepository';
+import { Customer } from '../../repositories/CustomerEntity';
+import { AppDataSource } from '../../database/ormconfig';
+import { Request, Response } from 'express';
+import { CreateCustomerDto } from '../../../domain/dtos/CreateCustomerDto';
+import { NotFoundError } from '../../../shared/errors/NotFoundError';
+import { RequestValidationError } from '../../../shared/errors/RequestValidationError';
+
+jest.mock('../../../application/CustomerService');
+jest.mock('../../repositories/CustomerRepository');
+jest.mock('../../database/ormconfig');
+
+describe('CustomerController', () => {
+  let customerController: CustomerController;
+  let customerService: jest.Mocked<CustomerService>;
+  let req: Partial<Request>;
+  let res: Partial<Response>;
+
+  beforeEach(() => {
+    const customerRepository = new CustomerRepository(AppDataSource.getRepository(Customer));
+    customerService = new CustomerService(customerRepository) as jest.Mocked<CustomerService>;
+    customerController = new CustomerController(customerService);
+
+    req = {
+      body: {},
+      params: {},
+      query: {},
+    };
+
+    res = {
+      status: jest.fn().mockReturnThis(),
+      json: jest.fn(),
+      send: jest.fn(),
+    };
+
+    // Mock the customerService methods
+    customerService.getAllCustomers = jest.fn();
+    customerService.getCustomerById = jest.fn();
+    customerService.createCustomer = jest.fn();
+    customerService.updateCustomer = jest.fn();
+    customerService.deleteCustomer = jest.fn();
+  });
+
+  it('should get all customers', async () => {
+    const customers = [
+      { id: 1, name: 'John Doe', email: 'john@example.com', address: '123 Main St' },
+      { id: 2, name: 'Jane Doe', email: 'jane@example.com', address: '456 Elm St' },
+    ] as Customer[];
+
+    customerService.getAllCustomers.mockResolvedValue(customers);
+
+    await customerController.getAll(req as Request, res as Response);
+    expect(customerService.getAllCustomers).toHaveBeenCalledWith({ page: 1, limit: 10 });
+    expect(res.json).toHaveBeenCalledWith(customers);
+  });
+
+  it('should get a customer by id', async () => {
+    const customer = { id: 1, name: 'John Doe', email: 'john@example.com', address: '123 Main St' } as Customer;
+
+    req.params!.id = '1';
+    customerService.getCustomerById.mockResolvedValue(customer);
+
+    await customerController.getById(req as Request, res as Response);
+    expect(customerService.getCustomerById).toHaveBeenCalledWith(1);
+    expect(res.json).toHaveBeenCalledWith(customer);
+  });
+
+  it('should create a customer', async () => {
+    const createCustomerDto = new CreateCustomerDto();
+    createCustomerDto.name = 'John Doe';
+    createCustomerDto.email = 'john@example.com';
+    createCustomerDto.address = '123 Main St';
+
+    req.body = createCustomerDto;
+    const customer = { id: 1, ...createCustomerDto } as Customer;
+
+    customerService.createCustomer.mockResolvedValue(customer);
+
+    await customerController.create(req as Request, res as Response);
+    expect(customerService.createCustomer).toHaveBeenCalledWith(createCustomerDto);
+    expect(res.status).toHaveBeenCalledWith(201);
+    expect(res.json).toHaveBeenCalledWith(customer);
+  });
+
+  it('should update a customer', async () => {
+    const updateCustomerDto = new CreateCustomerDto();
+    updateCustomerDto.name = 'John Doe';
+    updateCustomerDto.email = 'john@example.com';
+    updateCustomerDto.address = '123 Main St';
+
+    req.body = updateCustomerDto;
+    req.params!.id = '1';
+    const updatedCustomer = { id: 1, ...updateCustomerDto } as Customer;
+
+    customerService.updateCustomer.mockResolvedValue(updatedCustomer);
+
+    await customerController.update(req as Request, res as Response);
+    expect(customerService.updateCustomer).toHaveBeenCalledWith(1, updateCustomerDto);
+    expect(res.json).toHaveBeenCalledWith(updatedCustomer);
+  });
+
+  it('should delete a customer', async () => {
+    req.params!.id = '1';
+    customerService.getCustomerById.mockResolvedValue({ id: 1, name: 'John Doe', email: 'john@example.com', address: '123 Main St' } as Customer);
+    customerService.deleteCustomer.mockResolvedValue();
+
+    await customerController.delete(req as Request, res as Response);
+    expect(customerService.deleteCustomer).toHaveBeenCalledWith(1);
+    expect(res.status).toHaveBeenCalledWith(204);
+    expect(res.send).toHaveBeenCalled();
+  });
+
+  it('should return 404 when customer not found for deletion', async () => {
+    req.params!.id = '1';
+    customerService.getCustomerById.mockResolvedValue(null);
+
+    await expect(customerController.delete(req as Request, res as Response)).rejects.toThrow(NotFoundError);
+    expect(customerService.getCustomerById).toHaveBeenCalledWith(1);
+  });
+
+  it('should return 404 when customer not found', async () => {
+    req.params!.id = '1';
+    customerService.getCustomerById.mockResolvedValue(null);
+
+    await expect(customerController.getById(req as Request, res as Response)).rejects.toThrow(NotFoundError);
+    expect(customerService.getCustomerById).toHaveBeenCalledWith(1);
+  });
+
+  it('should return 400 when request validation fails', async () => {
+    req.body = {};
+
+    const validationErrors = [
+      {
+        property: 'name',
+        constraints: {
+          isNotEmpty: 'name should not be empty',
+        },
+      },
+    ];
+
+    jest.spyOn(customerService, 'createCustomer').mockImplementation(() => {
+      throw new RequestValidationError(validationErrors);
+    });
+
+    await expect(customerController.create(req as Request, res as Response)).rejects.toThrow(RequestValidationError);
+  });
+});
+
+
+// src\infrastructure\repositories\CustomerEntity.ts
+import { Entity, PrimaryGeneratedColumn, Column, Index } from 'typeorm';
+
+@Entity()
+@Index('IDX_custom_customer_email', ['email'])
+export class Customer {
+  @PrimaryGeneratedColumn()
+  id!: number;
+
+  @Column('text', { nullable: true })
+  name!: string;
+
+  @Column('text', { nullable: true })
+  @Index()
+  email!: string;
+
+  @Column('text', { nullable: true })
+  address!: string;
+}
+
+
+// src\infrastructure\repositories\CustomerRepository.ts
+import { Repository } from 'typeorm';
+import { Customer } from './CustomerEntity';
+import { ICustomerRepository } from '../../domain/ICustomerRepository';
+
+export class CustomerRepository implements ICustomerRepository {
+  constructor(private ormRepository: Repository<Customer>) { }
+
+  findAll({ page = 1, limit = 10 } = {}): Promise<Customer[]> {
+    const skip = (page - 1) * limit;
+    return this.ormRepository.find({
+      skip,
+      take: limit,
+    });
+  }
+
+  findById(id: number): Promise<Customer | null> {
+    return this.ormRepository.findOneBy({ id });
+  }
+
+  save(customer: Customer): Promise<Customer> {
+    return this.ormRepository.save(customer);
+  }
+
+  update(customer: Customer): Promise<Customer> {
+    return this.ormRepository.save(customer); // TypeORM save method also handles updates
+  }
+
+  delete(id: number): Promise<void> {
+    return this.ormRepository.delete(id).then(() => { });
+  }
+}
+
+
+// src\infrastructure\repositories\UserEntity.ts
+import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
+
+@Entity()
+export class User {
+  @PrimaryGeneratedColumn()
+  id!: number;
+
+  @Column('text', { nullable: true })
+  email!: string;
+
+  @Column('text', { nullable: true })
+  password!: string;
+}
+
+
+// src\infrastructure\repositories\UserRepository.ts
+import { Repository } from 'typeorm';
+import { User } from './UserEntity';
+import { IUserRepository } from '../../domain/IUserRepository';
+
+export class UserRepository implements IUserRepository {
+  constructor(private ormRepository: Repository<User>) { }
+
+  findByEmail(email: string): Promise<User | null> {
+    return this.ormRepository.findOne({ where: { email } });
+  }
+
+  save(user: User): Promise<User> {
+    return this.ormRepository.save(user);
+  }
+}
+
+
+// src\scripts\seed.ts
+import 'reflect-metadata';
+import { AppDataSource } from '../infrastructure/database/ormconfig';
+import { Customer } from '../infrastructure/repositories/CustomerEntity';
+import Chance from 'chance';
+
+const chance = new Chance();
+
+const seedData = async () => {
+  try {
+    await AppDataSource.initialize();
+    console.log('Inserting new customers into the database...');
+
+    const customers = [];
+    for (let i = 0; i < 10; i++) {
+      const customer = new Customer();
+      customer.name = chance.name();
+      customer.email = chance.email();
+      customer.address = chance.address();
+      customers.push(customer);
+    }
+
+    await AppDataSource.manager.save(customers);
+    console.log('Customers have been saved.');
+
+    console.log('Loading customers from the database...');
+    const loadedCustomers = await AppDataSource.manager.find(Customer);
+    console.log('Loaded customers: ', loadedCustomers);
+
+  } catch (error) {
+    console.error(error);
+  } finally {
+    await AppDataSource.destroy();
+  }
+};
+
+seedData();
+
+
+// src\shared\errors\AuthenticationError.ts
+import { CustomError } from './CustomError';
+
+export class AuthenticationError extends CustomError {
+  statusCode = 401;
+
+  constructor(message: string = 'Invalid credentials') {
+    super(message);
+    Object.setPrototypeOf(this, AuthenticationError.prototype);
+  }
+
+  serializeErrors() {
+    return [{ message: this.message }];
+  }
+}
+
+
+// src\shared\errors\CustomError.ts
+export abstract class CustomError extends Error {
+  abstract statusCode: number;
+
+  constructor(message: string) {
+    super(message);
+    Object.setPrototypeOf(this, CustomError.prototype);
+  }
+
+  abstract serializeErrors(): { message: string; field?: string }[];
+}
+
+
+// src\shared\errors\DatabaseConnectionError.ts
+import { CustomError } from './CustomError';
+
+export class DatabaseConnectionError extends CustomError {
+  statusCode = 500;
+  reason = 'Error connecting to database';
+
+  constructor() {
+    super('Error connecting to database');
+    Object.setPrototypeOf(this, DatabaseConnectionError.prototype);
+  }
+
+  serializeErrors() {
+    return [{ message: this.reason }];
+  }
+}
+
+
+// src\shared\errors\NotFoundError.ts
+import { CustomError } from './CustomError';
+
+export class NotFoundError extends CustomError {
+  statusCode = 404;
+
+  constructor(message: string = 'Resource not found') {
+    super(message);
+    Object.setPrototypeOf(this, NotFoundError.prototype);
+  }
+
+  serializeErrors() {
+    return [{ message: this.message }];
+  }
+}
+
+
+// src\shared\errors\RequestValidationError.ts
+import { ValidationError } from 'class-validator';
+import { CustomError } from './CustomError';
+
+export class RequestValidationError extends CustomError {
+  statusCode = 400;
+
+  constructor(public errors: ValidationError[]) {
+    super('Invalid request parameters');
+    Object.setPrototypeOf(this, RequestValidationError.prototype);
+  }
+
+  serializeErrors() {
+    return this.errors.map(err => {
+      return { message: Object.values(err.constraints!).join(', '), field: err.property };
+    });
+  }
+}
+
+
+// src\shared\middleware\errorHandler.ts
+import { NextFunction, Request, Response } from 'express';
+import { CustomError } from '../errors/CustomError';
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export const errorHandler = (err: Error, _req: Request, res: Response, _next: NextFunction) => {
+  console.log('Error caught by handler:', err);
+  if (err instanceof CustomError) {
+    return res.status(err.statusCode).send({ errors: err.serializeErrors() });
+  }
+
+  res.status(500).send({
+    errors: [{ message: 'Something went wrong' }],
+  });
+};
+
+
+// src\shared\utils\cacheMiddleware.ts
+import { Request, Response, NextFunction } from 'express';
+import { createClient } from 'redis';
+
+const redisHost = process.env.REDIS_HOST || 'redis';
+const redisPort = parseInt(process.env.REDIS_PORT || '6379', 10);
+
+const client = createClient({
+  url: `redis://${redisHost}:${redisPort}`
+});
+
+client.on('error', (err) => console.error('Redis error:', err));
+
+client.connect().catch(console.error);
+
+export const cacheMiddleware = async (req: Request, res: Response, next: NextFunction) => {
+  const key = req.originalUrl;
+
+  try {
+    const data = await client.get(key);
+    if (data) {
+      console.log('Data served from cache');
+      return res.send(JSON.parse(data));
+    } else {
+      const originalSend = res.send.bind(res);
+      res.send = (body: any): Response => {
+        client.setEx(key, 3600, JSON.stringify(body)).then(() => {
+          console.log('Redis setEx success');
+        }).catch((err) => {
+          console.error('Redis setEx error:', err);
+        });
+        return originalSend(body);
+      };
+      next();
+    }
+  } catch (err) {
+    console.error('Redis get error:', err);
+    next();
+  }
+};
+
+// Utility function to invalidate cache
+export const invalidateCache = async (key: string) => {
+  try {
+    await client.del(key);
+    console.log(`Cache for key ${key} invalidated`);
+  } catch (err) {
+    console.error(`Error invalidating cache for key ${key}:`, err);
+  }
+};
+
+
+// src\shared\utils\logger.ts
+
+
+// src\swagger-docs\auth.yaml
+openapi: 3.0.0
+info:
+  title: Authentication API
+  version: 1.0.0
+  description: API documentation for Authentication
+paths:
+  /auth/register:
+    post:
+      summary: Register a new user
+      tags:
+        - Auth
+      requestBody:
+        description: User object that needs to be added to the system
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/User'
+      responses:
+        201:
+          description: User registered successfully
+        400:
+          description: Invalid input
+  /auth/login:
+    post:
+      summary: Login a user
+      tags:
+        - Auth
+      requestBody:
+        description: User credentials for login
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                password:
+                  type: string
+      responses:
+        200:
+          description: Logged in successfully
+        401:
+          description: Invalid credentials
+  /auth/logout:
+    post:
+      summary: Logout a user
+      tags:
+        - Auth
+      responses:
+        200:
+          description: Logged out successfully
+  /auth/me:
+    get:
+      summary: Get current user
+      tags:
+        - Auth
+      responses:
+        200:
+          description: Current user details
+components:
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+        email:
+          type: string
+        password:
+          type: string
+
+
+// src\swagger-docs\customer.yaml
+openapi: 3.0.0
+info:
+  title: Customer API
+  version: 1.0.0
+  description: API documentation for Customer Management
+paths:
+  /customers:
+    get:
+      summary: Get all customers
+      tags:
+        - Customers
+      responses:
+        200:
+          description: A list of customers
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Customer'
+    post:
+      summary: Create a new customer
+      tags:
+        - Customers
+      requestBody:
+        description: Customer object that needs to be added to the system
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Customer'
+      responses:
+        201:
+          description: Customer created successfully
+        400:
+          description: Invalid input
+  /customers/{id}:
+    get:
+      summary: Get a customer by ID
+      tags:
+        - Customers
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        200:
+          description: Customer details
+        404:
+          description: Customer not found
+    put:
+      summary: Update a customer by ID
+      tags:
+        - Customers
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        description: Customer object with updated details
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Customer'
+      responses:
+        200:
+          description: Customer updated successfully
+        400:
+          description: Invalid input
+        404:
+          description: Customer not found
+    delete:
+      summary: Delete a customer by ID
+      tags:
+        - Customers
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+     
+
+
+// src\swagger.ts
+import swaggerJsdoc from 'swagger-jsdoc';
+import swaggerUi from 'swagger-ui-express';
+import { Application } from 'express';
+import path from 'path';
+
+const yamlPath = path.join(__dirname, './swagger-docs/*.yaml');
+
+const options = {
+  definition: {
+    openapi: '3.0.0',
+    info: {
+      title: 'Customer Management System API',
+      version: '1.0.0',
+      description: 'API documentation for the Customer Management System',
+    },
+    servers: [
+      {
+        url: 'http://localhost:3000',
+        description: 'Development server',
+      },
+    ],
+  },
+  apis: [yamlPath],
+};
+
+const specs = swaggerJsdoc(options);
+
+export default (app: Application) => {
+  app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs));
+};
+
+
+// src\types\express\index.d.ts
+declare namespace Express {
+  interface Request {
+    user?: any;
+  }
+}
+
+
+// tsconfig.json
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "commonjs",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "typeRoots": [
+      "./node_modules/@types",
+      "./src/types"
+    ]
+  },
+  "include": [
+    "src/**/*",
+    "tests/**/*"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist"
+  ]
+}

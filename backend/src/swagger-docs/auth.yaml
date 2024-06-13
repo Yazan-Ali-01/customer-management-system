@@ -1,0 +1,72 @@
+openapi: 3.0.0
+info:
+  title: Authentication API
+  version: 1.0.0
+  description: API documentation for Authentication
+paths:
+  /auth/register:
+    post:
+      summary: Register a new user
+      tags:
+        - Auth
+      requestBody:
+        description: User object that needs to be added to the system
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/User'
+      responses:
+        201:
+          description: User registered successfully
+        400:
+          description: Invalid input
+  /auth/login:
+    post:
+      summary: Login a user
+      tags:
+        - Auth
+      requestBody:
+        description: User credentials for login
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                password:
+                  type: string
+      responses:
+        200:
+          description: Logged in successfully
+        401:
+          description: Invalid credentials
+  /auth/logout:
+    post:
+      summary: Logout a user
+      tags:
+        - Auth
+      responses:
+        200:
+          description: Logged out successfully
+  /auth/me:
+    get:
+      summary: Get current user
+      tags:
+        - Auth
+      responses:
+        200:
+          description: Current user details
+components:
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+        email:
+          type: string
+        password:
+          type: string

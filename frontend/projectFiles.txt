@@ -1,0 +1,2135 @@
+// .eslintrc.json
+{
+  "extends": [
+    "react-app",
+    "plugin:@typescript-eslint/recommended",
+    "plugin:react/recommended",
+    "plugin:jsx-a11y/recommended",
+    "prettier"
+  ],
+  "plugins": [
+    "@typescript-eslint",
+    "react",
+    "react-hooks",
+    "jsx-a11y"
+  ],
+  "rules": {
+    "react/react-in-jsx-scope": "off",
+    "react/prop-types": "off",
+    "@typescript-eslint/explicit-module-boundary-types": "off"
+  },
+  "settings": {
+    "react": {
+      "version": "detect"
+    }
+  },
+  "env": {
+    "browser": true,
+    "node": true,
+    "es6": true
+  }
+}
+
+// .gitignore
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+dist
+dist-ssr
+*.local
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+
+// .prettierrc
+{
+  "singleQuote": true,
+  "trailingComma": "all",
+  "printWidth": 80,
+  "tabWidth": 2,
+  "semi": true
+}
+
+
+// components.json
+{
+  "$schema": "https://ui.shadcn.com/schema.json",
+  "style": "new-york",
+  "rsc": false,
+  "tsx": true,
+  "tailwind": {
+    "config": "tailwind.config.js",
+    "css": "src/index.css",
+    "baseColor": "slate",
+    "cssVariables": true,
+    "prefix": ""
+  },
+  "aliases": {
+    "components": "@/components",
+    "utils": "@/lib/utils"
+  }
+}
+
+// index.html
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Vite + React + TS</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
+
+
+// listFilesAndContents.ts
+import fs from 'fs';
+import path from 'path';
+
+const ROOT_DIR = '.';
+const OUTPUT_FILE = 'projectFiles.txt';
+const IGNORE_DIRS = ['node_modules', 'dist', 'ui'];
+const IGNORE_FILES = ['package-lock.json'];
+
+function listFilesAndContents(dir: string): string[] {
+  const results: string[] = [];
+
+  function readDir(dir: string) {
+    fs.readdirSync(dir).forEach((file) => {
+      const filePath = path.join(dir, file);
+      const stat = fs.statSync(filePath);
+
+      if (stat.isDirectory() && !IGNORE_DIRS.includes(file)) {
+        readDir(filePath);
+      } else if (stat.isFile() && !IGNORE_FILES.includes(file)) {
+        const fileContent = fs.readFileSync(filePath, 'utf-8');
+        results.push(`// ${filePath}\n${fileContent}\n`);
+      }
+    });
+  }
+
+  readDir(dir);
+  return results;
+}
+
+const output = listFilesAndContents(ROOT_DIR).join('\n');
+fs.writeFileSync(OUTPUT_FILE, output);
+
+console.log(`File list and contents written to ${OUTPUT_FILE}`);
+
+
+// package.json
+{
+  "name": "my-frontend-app",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@hookform/resolvers": "^3.6.0",
+    "@radix-ui/react-dialog": "^1.0.5",
+    "@radix-ui/react-dropdown-menu": "^2.0.6",
+    "@radix-ui/react-icons": "^1.3.0",
+    "@radix-ui/react-label": "^2.0.2",
+    "@radix-ui/react-popover": "^1.0.7",
+    "@radix-ui/react-slot": "^1.0.2",
+    "@radix-ui/react-toast": "^1.1.5",
+    "@tanstack/react-table": "^8.17.3",
+    "axios": "^1.7.2",
+    "class-variance-authority": "^0.7.0",
+    "clsx": "^2.1.1",
+    "framer-motion": "^11.2.10",
+    "jwt-decode": "^4.0.0",
+    "lucide": "^0.394.0",
+    "lucide-react": "^0.394.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-hook-form": "^7.51.5",
+    "react-router-dom": "^6.23.1",
+    "tailwind-merge": "^2.3.0",
+    "tailwindcss-animate": "^1.0.7",
+    "vaul": "^0.9.1",
+    "zod": "^3.23.8",
+    "zustand": "^4.5.2"
+  },
+  "devDependencies": {
+    "@testing-library/jest-dom": "^6.4.6",
+    "@testing-library/react": "^16.0.0",
+    "@testing-library/user-event": "^14.5.2",
+    "@types/node": "^20.14.2",
+    "@types/react": "^18.2.66",
+    "@types/react-dom": "^18.2.22",
+    "@types/tailwindcss": "^3.1.0",
+    "@typescript-eslint/eslint-plugin": "^7.2.0",
+    "@typescript-eslint/parser": "^7.2.0",
+    "@vitejs/plugin-react": "^4.2.1",
+    "autoprefixer": "^10.4.19",
+    "eslint": "^8.57.0",
+    "eslint-plugin-react-hooks": "^4.6.0",
+    "eslint-plugin-react-refresh": "^0.4.6",
+    "jest": "^29.7.0",
+    "postcss": "^8.4.38",
+    "tailwindcss": "^3.4.4",
+    "typescript": "^5.2.2",
+    "vite": "^5.2.0"
+  }
+}
+
+
+// postcss.config.js
+export default {
+  plugins: {
+    tailwindcss: {},
+    autoprefixer: {},
+  },
+}
+
+
+// public\vite.svg
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" aria-hidden="true" role="img" class="iconify iconify--logos" width="31.88" height="32" preserveAspectRatio="xMidYMid meet" viewBox="0 0 256 257"><defs><linearGradient id="IconifyId1813088fe1fbc01fb466" x1="-.828%" x2="57.636%" y1="7.652%" y2="78.411%"><stop offset="0%" stop-color="#41D1FF"></stop><stop offset="100%" stop-color="#BD34FE"></stop></linearGradient><linearGradient id="IconifyId1813088fe1fbc01fb467" x1="43.376%" x2="50.316%" y1="2.242%" y2="89.03%"><stop offset="0%" stop-color="#FFEA83"></stop><stop offset="8.333%" stop-color="#FFDD35"></stop><stop offset="100%" stop-color="#FFA800"></stop></linearGradient></defs><path fill="url(#IconifyId1813088fe1fbc01fb466)" d="M255.153 37.938L134.897 252.976c-2.483 4.44-8.862 4.466-11.382.048L.875 37.958c-2.746-4.814 1.371-10.646 6.827-9.67l120.385 21.517a6.537 6.537 0 0 0 2.322-.004l117.867-21.483c5.438-.991 9.574 4.796 6.877 9.62Z"></path><path fill="url(#IconifyId1813088fe1fbc01fb467)" d="M185.432.063L96.44 17.501a3.268 3.268 0 0 0-2.634 3.014l-5.474 92.456a3.268 3.268 0 0 0 3.997 3.378l24.777-5.718c2.318-.535 4.413 1.507 3.936 3.838l-7.361 36.047c-.495 2.426 1.782 4.5 4.151 3.78l15.304-4.649c2.372-.72 4.652 1.36 4.15 3.788l-11.698 56.621c-.732 3.542 3.979 5.473 5.943 2.437l1.313-2.028l72.516-144.72c1.215-2.423-.88-5.186-3.54-4.672l-25.505 4.922c-2.396.462-4.435-1.77-3.759-4.114l16.646-57.705c.677-2.35-1.37-4.583-3.769-4.113Z"></path></svg>
+
+// README.md
+# React + TypeScript + Vite
+
+This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+
+Currently, two official plugins are available:
+
+- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
+- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+
+## Expanding the ESLint configuration
+
+If you are developing a production application, we recommend updating the configuration to enable type aware lint rules:
+
+- Configure the top-level `parserOptions` property like this:
+
+```js
+export default {
+  // other rules...
+  parserOptions: {
+    ecmaVersion: 'latest',
+    sourceType: 'module',
+    project: ['./tsconfig.json', './tsconfig.node.json'],
+    tsconfigRootDir: __dirname,
+  },
+}
+```
+
+- Replace `plugin:@typescript-eslint/recommended` to `plugin:@typescript-eslint/recommended-type-checked` or `plugin:@typescript-eslint/strict-type-checked`
+- Optionally add `plugin:@typescript-eslint/stylistic-type-checked`
+- Install [eslint-plugin-react](https://github.com/jsx-eslint/eslint-plugin-react) and add `plugin:react/recommended` & `plugin:react/jsx-runtime` to the `extends` list
+
+
+// src\assets\react.svg
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" aria-hidden="true" role="img" class="iconify iconify--logos" width="35.93" height="32" preserveAspectRatio="xMidYMid meet" viewBox="0 0 256 228"><path fill="#00D8FF" d="M210.483 73.824a171.49 171.49 0 0 0-8.24-2.597c.465-1.9.893-3.777 1.273-5.621c6.238-30.281 2.16-54.676-11.769-62.708c-13.355-7.7-35.196.329-57.254 19.526a171.23 171.23 0 0 0-6.375 5.848a155.866 155.866 0 0 0-4.241-3.917C100.759 3.829 77.587-4.822 63.673 3.233C50.33 10.957 46.379 33.89 51.995 62.588a170.974 170.974 0 0 0 1.892 8.48c-3.28.932-6.445 1.924-9.474 2.98C17.309 83.498 0 98.307 0 113.668c0 15.865 18.582 31.778 46.812 41.427a145.52 145.52 0 0 0 6.921 2.165a167.467 167.467 0 0 0-2.01 9.138c-5.354 28.2-1.173 50.591 12.134 58.266c13.744 7.926 36.812-.22 59.273-19.855a145.567 145.567 0 0 0 5.342-4.923a168.064 168.064 0 0 0 6.92 6.314c21.758 18.722 43.246 26.282 56.54 18.586c13.731-7.949 18.194-32.003 12.4-61.268a145.016 145.016 0 0 0-1.535-6.842c1.62-.48 3.21-.974 4.76-1.488c29.348-9.723 48.443-25.443 48.443-41.52c0-15.417-17.868-30.326-45.517-39.844Zm-6.365 70.984c-1.4.463-2.836.91-4.3 1.345c-3.24-10.257-7.612-21.163-12.963-32.432c5.106-11 9.31-21.767 12.459-31.957c2.619.758 5.16 1.557 7.61 2.4c23.69 8.156 38.14 20.213 38.14 29.504c0 9.896-15.606 22.743-40.946 31.14Zm-10.514 20.834c2.562 12.94 2.927 24.64 1.23 33.787c-1.524 8.219-4.59 13.698-8.382 15.893c-8.067 4.67-25.32-1.4-43.927-17.412a156.726 156.726 0 0 1-6.437-5.87c7.214-7.889 14.423-17.06 21.459-27.246c12.376-1.098 24.068-2.894 34.671-5.345a134.17 134.17 0 0 1 1.386 6.193ZM87.276 214.515c-7.882 2.783-14.16 2.863-17.955.675c-8.075-4.657-11.432-22.636-6.853-46.752a156.923 156.923 0 0 1 1.869-8.499c10.486 2.32 22.093 3.988 34.498 4.994c7.084 9.967 14.501 19.128 21.976 27.15a134.668 134.668 0 0 1-4.877 4.492c-9.933 8.682-19.886 14.842-28.658 17.94ZM50.35 144.747c-12.483-4.267-22.792-9.812-29.858-15.863c-6.35-5.437-9.555-10.836-9.555-15.216c0-9.322 13.897-21.212 37.076-29.293c2.813-.98 5.757-1.905 8.812-2.773c3.204 10.42 7.406 21.315 12.477 32.332c-5.137 11.18-9.399 22.249-12.634 32.792a134.718 134.718 0 0 1-6.318-1.979Zm12.378-84.26c-4.811-24.587-1.616-43.134 6.425-47.789c8.564-4.958 27.502 2.111 47.463 19.835a144.318 144.318 0 0 1 3.841 3.545c-7.438 7.987-14.787 17.08-21.808 26.988c-12.04 1.116-23.565 2.908-34.161 5.309a160.342 160.342 0 0 1-1.76-7.887Zm110.427 27.268a347.8 347.8 0 0 0-7.785-12.803c8.168 1.033 15.994 2.404 23.343 4.08c-2.206 7.072-4.956 14.465-8.193 22.045a381.151 381.151 0 0 0-7.365-13.322Zm-45.032-43.861c5.044 5.465 10.096 11.566 15.065 18.186a322.04 322.04 0 0 0-30.257-.006c4.974-6.559 10.069-12.652 15.192-18.18ZM82.802 87.83a323.167 323.167 0 0 0-7.227 13.238c-3.184-7.553-5.909-14.98-8.134-22.152c7.304-1.634 15.093-2.97 23.209-3.984a321.524 321.524 0 0 0-7.848 12.897Zm8.081 65.352c-8.385-.936-16.291-2.203-23.593-3.793c2.26-7.3 5.045-14.885 8.298-22.6a321.187 321.187 0 0 0 7.257 13.246c2.594 4.48 5.28 8.868 8.038 13.147Zm37.542 31.03c-5.184-5.592-10.354-11.779-15.403-18.433c4.902.192 9.899.29 14.978.29c5.218 0 10.376-.117 15.453-.343c-4.985 6.774-10.018 12.97-15.028 18.486Zm52.198-57.817c3.422 7.8 6.306 15.345 8.596 22.52c-7.422 1.694-15.436 3.058-23.88 4.071a382.417 382.417 0 0 0 7.859-13.026a347.403 347.403 0 0 0 7.425-13.565Zm-16.898 8.101a358.557 358.557 0 0 1-12.281 19.815a329.4 329.4 0 0 1-23.444.823c-7.967 0-15.716-.248-23.178-.732a310.202 310.202 0 0 1-12.513-19.846h.001a307.41 307.41 0 0 1-10.923-20.627a310.278 310.278 0 0 1 10.89-20.637l-.001.001a307.318 307.318 0 0 1 12.413-19.761c7.613-.576 15.42-.876 23.31-.876H128c7.926 0 15.743.303 23.354.883a329.357 329.357 0 0 1 12.335 19.695a358.489 358.489 0 0 1 11.036 20.54a329.472 329.472 0 0 1-11 20.722Zm22.56-122.124c8.572 4.944 11.906 24.881 6.52 51.026c-.344 1.668-.73 3.367-1.15 5.09c-10.622-2.452-22.155-4.275-34.23-5.408c-7.034-10.017-14.323-19.124-21.64-27.008a160.789 160.789 0 0 1 5.888-5.4c18.9-16.447 36.564-22.941 44.612-18.3ZM128 90.808c12.625 0 22.86 10.235 22.86 22.86s-10.235 22.86-22.86 22.86s-22.86-10.235-22.86-22.86s10.235-22.86 22.86-22.86Z"></path></svg>
+
+// src\components\CustomerEditForm.tsx
+// src/features/customers/components/CustomerEditForm.tsx
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Customer } from "@/features/customers";
+
+interface CustomerEditFormProps {
+  customer: Customer;
+  onSubmit: (data: Customer) => void;
+}
+
+const formSchema = z.object({
+  name: z.string().min(2, { message: "Name must be at least 2 characters." }),
+  email: z.string().email({ message: "Invalid email address." }),
+  address: z.string().min(5, { message: "Address must be at least 5 characters." }),
+});
+
+export const CustomerEditForm: React.FC<CustomerEditFormProps> = ({ customer, onSubmit }) => {
+  const form = useForm<Customer>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      name: customer.name,
+      email: customer.email,
+      address: customer.address,
+    },
+  });
+
+  return (
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 p-6">
+        <FormField
+          control={form.control}
+          name="name"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Name</FormLabel>
+              <FormControl>
+                <Input placeholder="Name" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="email"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Email</FormLabel>
+              <FormControl>
+                <Input placeholder="Email" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="address"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Address</FormLabel>
+              <FormControl>
+                <Input placeholder="Address" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      </form>
+    </Form>
+  );
+};
+
+
+// src\components\CustomerFilter.tsx
+// src/features/customers/components/CustomerFilter.tsx
+import React from 'react';
+
+interface CustomerFilterProps {
+  limit: number;
+  onLimitChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onApplyFilters: () => void;
+}
+
+const CustomerFilter: React.FC<CustomerFilterProps> = ({ limit, onLimitChange, onApplyFilters }) => {
+  return (
+    <div className='flex space-x-4'>
+      <input
+        type='number'
+        name='limit'
+        placeholder='Limit'
+        value={limit}
+        onChange={onLimitChange}
+        className='input'
+      />
+      <button onClick={onApplyFilters} className='button'>Apply</button>
+    </div>
+  );
+};
+
+export default CustomerFilter;
+
+
+// src\components\ErrorBoundary.tsx
+import React, { Component, ReactNode } from 'react';
+
+interface ErrorBoundaryProps {
+  children: ReactNode;
+}
+
+interface ErrorBoundaryState {
+  hasError: boolean;
+}
+
+class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
+  constructor(props: ErrorBoundaryProps) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError(_: Error): ErrorBoundaryState {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+    console.error('Error caught by ErrorBoundary:', error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return <h1>Something went wrong.</h1>;
+    }
+
+    return this.props.children;
+  }
+}
+
+const withErrorBoundary = (Component: React.FC) => (props: any) => (
+  <ErrorBoundary>
+    <Component {...props} />
+  </ErrorBoundary>
+);
+
+export default withErrorBoundary;
+
+
+// src\components\magicui\meteors.tsx
+// Update the Meteors component with z-index
+import clsx from "clsx";
+import { useEffect, useState } from "react";
+
+interface MeteorsProps {
+  number?: number;
+}
+export const Meteors = ({ number = 20 }: MeteorsProps) => {
+  const [meteorStyles, setMeteorStyles] = useState<Array<React.CSSProperties>>([]);
+
+  useEffect(() => {
+    const styles = [...new Array(number)].map(() => ({
+      top: -5,
+      left: Math.floor(Math.random() * window.innerWidth) + "px",
+      animationDelay: Math.random() * 1 + 0.2 + "s",
+      animationDuration: Math.floor(Math.random() * 8 + 2) + "s",
+      zIndex: 0, // Ensure meteors are below the main content
+    }));
+    setMeteorStyles(styles);
+  }, [number]);
+
+  return (
+    <>
+      {meteorStyles.map((style, idx) => (
+        // Meteor Head
+        <span
+          key={idx}
+          className={clsx(
+            "pointer-events-none absolute left-1/2 top-1/2 h-0.5 w-0.5 rotate-[215deg] animate-meteor rounded-[9999px] bg-slate-500 shadow-[0_0_0_1px_#ffffff10]",
+          )}
+          style={style}
+        >
+          {/* Meteor Tail */}
+          <div className="pointer-events-none absolute top-1/2 -z-10 h-[1px] w-[50px] -translate-y-1/2 bg-gradient-to-r from-slate-500 to-transparent" />
+        </span>
+      ))}
+    </>
+  );
+};
+
+export default Meteors;
+
+
+// src\components\NotFound.tsx
+import React from "react";
+import { Link } from "react-router-dom";
+
+const NotFound: React.FC = () => (
+  <div>
+    <h1>404 - Not Found</h1>
+    <Link to="/">Go Home</Link>
+  </div>
+);
+
+export default NotFound;
+
+// src\components\ProtectedRoute.tsx
+import React from 'react';
+import { Navigate, Outlet } from 'react-router-dom';
+import { jwtDecode } from 'jwt-decode';
+
+const ProtectedRoute: React.FC = () => {
+  const token = localStorage.getItem('token');
+
+  const isTokenExpired = (token: string) => {
+    try {
+      const { exp } = jwtDecode<{ exp: number }>(token);
+      if (exp * 1000 < Date.now()) {
+        return true;
+      }
+      return false;
+    } catch (error) {
+      return true;
+    }
+  };
+
+  if (!token || isTokenExpired(token)) {
+    return <Navigate to="/auth/login" />;
+  }
+
+  return <Outlet />;
+};
+
+export default ProtectedRoute;
+
+
+// src\context\ErrorContext.tsx
+// src/context/ErrorContext.tsx
+import React, { createContext, useContext, useState, ReactNode } from 'react';
+
+interface ErrorContextType {
+  error: string | null;
+  setError: (message: string | null) => void;
+}
+
+const ErrorContext = createContext<ErrorContextType | undefined>(undefined);
+
+export const ErrorProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+  const [error, setError] = useState<string | null>(null);
+
+  return (
+    <ErrorContext.Provider value={{ error, setError }}>
+      {children}
+      {error && <div className="error-notification">{error}</div>}
+    </ErrorContext.Provider>
+  );
+};
+
+export const useError = (): ErrorContextType => {
+  const context = useContext(ErrorContext);
+  if (context === undefined) {
+    throw new Error('useError must be used within an ErrorProvider');
+  }
+  return context;
+};
+
+
+// src\features\auth\components\LoginForm.tsx
+import React, { useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { z } from 'zod';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { Button } from '@/components/ui/button';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { useAuthStore } from '@/features/auth/hooks/useAuthStore';
+import { useError } from '@/context/ErrorContext';
+import { useNavigate, Link } from 'react-router-dom';
+import { Input } from '@/components/ui/input';
+
+const formSchema = z.object({
+  email: z.string().email({ message: 'Invalid email address.' }),
+  password: z.string().min(6, { message: 'Password must be at least 6 characters.' }),
+});
+
+const LoginForm: React.FC = () => {
+  const { login } = useAuthStore();
+  const navigate = useNavigate();
+  const { setError } = useError();
+  const [isLoading, setIsLoading] = useState(false);
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      email: '',
+      password: '',
+    },
+  });
+
+  const onSubmit = async (values: z.infer<typeof formSchema>) => {
+    setIsLoading(true);
+    try {
+      await login(values.email, values.password);
+      navigate('/');
+    } catch (error) {
+      setError('Failed to login. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        <FormField
+          control={form.control}
+          name="email"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Email</FormLabel>
+              <FormControl>
+                <Input type="email" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="password"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Password</FormLabel>
+              <FormControl>
+                <Input type="password" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <Button type="submit" disabled={isLoading}>
+          {isLoading ? 'Logging in...' : 'Login'}
+        </Button>
+        <Link to="/auth/register">
+          <div className="text-center text-slate-850/20 underline text-sm mt-4">
+            <p>
+              Don't have an account? <span className="font-semibold">
+                Register
+              </span>
+            </p>
+          </div>
+        </Link>
+      </form>
+    </Form>
+  );
+};
+
+export default LoginForm;
+
+
+// src\features\auth\components\RegisterForm.tsx
+import { zodResolver } from "@hookform/resolvers/zod"
+import { useForm } from "react-hook-form"
+import { z } from "zod"
+import { Button } from "@/components/ui/button"
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form"
+import { useAuthStore } from '@/features/auth/hooks/useAuthStore'
+import { Input } from "@/components/ui/input"
+import { Link, useNavigate } from 'react-router-dom';
+import { useToast } from "@/components/ui/use-toast"
+
+const formSchema = z.object({
+  email: z.string().email({ message: "Invalid email address." }),
+  password: z.string().min(6, { message: "Password must be at least 6 characters." }),
+})
+
+const RegisterForm: React.FC = () => {
+  const { register: authRegister } = useAuthStore()
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      email: "",
+      password: "",
+    },
+  })
+
+  const onSubmit = async (values: z.infer<typeof formSchema>) => {
+    try {
+      await authRegister(values.email, values.password);
+      toast({
+        title: 'Registration Successful',
+        description: 'You have been registered successfully. Please login.',
+      });
+      navigate('/auth/login');
+    } catch (error) {
+      console.error('Failed to register', error);
+    }
+  }
+
+  return (
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        <FormField
+          control={form.control}
+          name="email"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Email</FormLabel>
+              <FormControl>
+                <Input placeholder="Email" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="password"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Password</FormLabel>
+              <FormControl>
+                <Input type="password" placeholder="Password" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <Button type="submit">Register</Button>
+        <Link to="/auth/login">
+          <div className="text-center text-slate-850/20 underline text-sm mt-4">
+            <p>
+              Already have an account? <span className="font-semibold">
+                Login
+              </span>
+            </p>
+          </div>
+        </Link>
+      </form>
+    </Form>
+  )
+}
+
+export default RegisterForm
+
+// src\features\auth\context\AuthContext.tsx
+
+
+// src\features\auth\hooks\useAuthStore.ts
+import { create } from 'zustand';
+import * as authService from '@/features/auth/services/authService';
+
+interface AuthState {
+  isAuthenticated: boolean;
+  login: (email: string, password: string) => Promise<void>;
+  register: (email: string, password: string) => Promise<void>;
+  logout: () => void;
+}
+
+export const useAuthStore = create<AuthState>((set) => ({
+  isAuthenticated: false,
+  login: async (email, password) => {
+    const response = await authService.login(email, password);
+    if (response) {
+      set({ isAuthenticated: true });
+    }
+  },
+  register: async (email, password) => {
+    const response = await authService.register(email, password);
+    if (response) {
+      set({ isAuthenticated: true });
+    }
+  },
+  logout: () => {
+    authService.logout();
+    set({ isAuthenticated: false });
+  },
+}));
+
+
+// src\features\auth\index.ts
+export * from './components/LoginForm';
+export * from './components/RegisterForm';
+export * from './services/authService';
+export * from './hooks/useAuthStore';
+export * from './types/AuthTypes';
+export * from './routes/AuthRoutes';
+
+// src\features\auth\pages\LoginPage.tsx
+import { HeartHandshake } from 'lucide-react';
+import LoginForm from '../components/LoginForm';
+
+const LoginPage: React.FC = () => {
+  return (
+    <div className="h-screen flex">
+      <div className="w-1/2 flex flex-col items-start justify-start pl-20 py-10">
+        {/* First column content */}
+        <h1 className="text-3xl font-bold mb-4 text-[#2dd4bf]">Access Your Dashboard!</h1>
+        <p className="mb-6">Fill out the form below to log into your admin account.</p>
+        <LoginForm />
+      </div>
+      <div className="w-1/2 flex items-center justify-center bg-green-400/20">
+        {/* Second column content */}
+        <div className="flex flex-col items-center justify-center">
+          <h1 className="text-2xl font-bold mb-4">Welcome Back to My CMS ASSESSMENT</h1>
+          <p className="mb-8 font-semibold">Please login to continue.</p>
+          <HeartHandshake color="#2dd4bf" />
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default LoginPage;
+
+
+// src\features\auth\pages\RegisterPage.tsx
+import RegisterForm from "../components/RegisterForm";
+import { HeartHandshake } from 'lucide-react';
+
+const RegisterPage: React.FC = () => {
+  return (
+    <div className="h-screen flex">
+      <div className="w-1/2 flex flex-col items-start justify-start pl-20 py-10">
+        {/* First column content */}
+        <h1 className="text-3xl font-bold mb-4 text-[#2dd4bf]">Check The Assessment UI!</h1>
+        <p className="mb-6">Fill out the form below to create an admin account.</p>
+        <RegisterForm />
+      </div>
+      <div className="w-1/2 flex items-center justify-center bg-green-400/20">
+        {/* Second column content */}
+        <div className="flex flex-col items-center justify-center">
+          <h1 className="text-2xl font-bold mb-4">Welcome to My CMS ASSESSMENT</h1>
+          <p className="mb-8 font-semibold">Please register to continue.</p>
+          <HeartHandshake color="#2dd4bf" />
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default RegisterPage;
+
+
+// src\features\auth\routes\AuthRoutes.tsx
+import React from 'react';
+import { Routes, Route } from 'react-router-dom';
+import RegisterPage from '../pages/RegisterPage';
+import LoginPage from '../pages/LoginPage';
+
+const AuthRoutes: React.FC = () => (
+  <Routes>
+    <Route path="/login" element={<LoginPage />} />
+    <Route path="/register" element={<RegisterPage />} />
+  </Routes>
+);
+
+export default AuthRoutes;
+
+
+// src\features\auth\services\authService.ts
+import axiosInstance from '@/utils/axiosInstance';
+
+const API_URL = 'http://localhost:5000/auth';
+
+export const login = async (email: string, password: string) => {
+  try {
+    const response = await axiosInstance.post(`${API_URL}/login`, { email, password });
+    localStorage.setItem('token', response.data.token);
+    localStorage.setItem('refreshToken', response.data.refreshToken);
+    return response.data;
+  } catch (error: any) {
+    handleAuthError(error);
+  }
+};
+
+export const register = async (email: string, password: string) => {
+  try {
+    const response = await axiosInstance.post(`${API_URL}/register`, { email, password });
+    localStorage.setItem('token', response.data.token);
+    localStorage.setItem('refreshToken', response.data.refreshToken);
+    return response.data;
+  } catch (error: any) {
+    handleAuthError(error);
+  }
+};
+
+export const logout = () => {
+  localStorage.removeItem('token');
+  localStorage.removeItem('refreshToken');
+  window.location.href = '/auth/login';
+};
+
+export const refreshToken = async () => {
+  const refreshToken = localStorage.getItem('refreshToken');
+  if (!refreshToken) throw new Error('No refresh token available');
+
+  try {
+    const response = await axiosInstance.post(`${API_URL}/refresh-token`, { refreshToken });
+    localStorage.setItem('token', response.data.token);
+    return response.data.token;
+  } catch (error: any) {
+    handleAuthError(error);
+  }
+};
+
+const handleAuthError = (error: any) => {
+  if (error.response?.status === 401 || error.response?.status === 403) {
+    localStorage.removeItem('token');
+    localStorage.removeItem('refreshToken');
+    window.location.href = '/auth/login';
+  } else {
+    console.log('main error ', error);
+
+    throw new Error(error.response?.data?.message || 'Failed to authenticate');
+  }
+};
+
+
+// src\features\auth\types\AuthTypes.ts
+export interface AuthContextType {
+  isAuthenticated: boolean;
+  login: (email: string, password: string) => Promise<void>;
+  register: (email: string, password: string) => Promise<void>;
+  logout: () => void;
+}
+
+// src\features\customers\components\AddCustomerDialog.tsx
+import { useState } from 'react';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from "zod";
+import { useForm } from 'react-hook-form';
+import { Button } from '@/components/ui/button';
+import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Form, FormField, FormItem, FormLabel, FormControl, FormDescription, FormMessage } from '@/components/ui/form';
+import { useCustomerStore } from '@/features/customers/hooks/useCustomerStore';
+import { useToast } from "@/components/ui/use-toast";
+import { useError } from '@/context/ErrorContext';
+import axios from 'axios';
+
+const customerSchema = z.object({
+  name: z.string()
+    .min(2, { message: "Name must be at least 2 characters long." })
+    .regex(/^[a-zA-Z\s]*$/, { message: "Name must contain only alphabetic characters." }),
+  email: z.string().email({ message: "Invalid email address." }),
+  address: z.string().min(5, { message: "Address must be at least 5 characters long." }),
+});
+
+const AddCustomerDialog: React.FC = () => {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [open, setOpen] = useState(false);
+  const form = useForm({
+    resolver: zodResolver(customerSchema),
+    defaultValues: {
+      name: "",
+      email: "",
+      address: "",
+    },
+  });
+
+  const { addCustomer, fetchCustomers } = useCustomerStore();
+  const { toast } = useToast();
+  const { setError } = useError();
+
+  const onSubmit = async (data: z.infer<typeof customerSchema>) => {
+    setIsSubmitting(true);
+
+    try {
+      await addCustomer(data);
+      await fetchCustomers();
+      form.reset();
+      setIsSubmitting(false);
+      setOpen(false);
+      // Close the dialog programmatically
+      (document.querySelector('[data-state="open"] [data-state="closed"]') as HTMLElement)?.click();
+      toast({
+        title: "Success",
+        description: "Customer added successfully.",
+      });
+    } catch (error: any) {
+
+      if (axios.isAxiosError(error)) {
+        if (error.response && error.response.data && error.response.data.errors) {
+          error.response.data.errors.forEach((err: { message: string }) => {
+            toast({
+              title: "Error",
+              description: err.message || "Failed to add customer.",
+            });
+          });
+        } else {
+          toast({
+            title: "Error",
+            description: error.message || "Failed to add customer.",
+          });
+        }
+      } else {
+        setError(error.message || "Failed to add customer");
+        toast({
+          title: "Error",
+          description: error.message || "Failed to add customer.",
+        });
+      }
+      setIsSubmitting(false);
+    }
+  };
+
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button variant="default" className='rounded-lg h-8 shadow-lg'>Add New Customer</Button>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Add New Customer</DialogTitle>
+          <DialogDescription>
+            Enter the details of the new customer.
+          </DialogDescription>
+        </DialogHeader>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+            <FormField control={form.control} name="name" render={({ field }) => (
+              <FormItem>
+                <FormLabel>Name</FormLabel>
+                <FormControl>
+                  <Input {...field} />
+                </FormControl>
+                <FormDescription>Enter the full name of the customer.</FormDescription>
+                <FormMessage />
+              </FormItem>
+            )} />
+            <FormField control={form.control} name="email" render={({ field }) => (
+              <FormItem>
+                <FormLabel>Email</FormLabel>
+                <FormControl>
+                  <Input {...field} />
+                </FormControl>
+                <FormDescription>Enter the email address of the customer.</FormDescription>
+                <FormMessage />
+              </FormItem>
+            )} />
+            <FormField control={form.control} name="address" render={({ field }) => (
+              <FormItem>
+                <FormLabel>Address</FormLabel>
+                <FormControl>
+                  <Input {...field} />
+                </FormControl>
+                <FormDescription>Enter the address of the customer.</FormDescription>
+                <FormMessage />
+              </FormItem>
+            )} />
+            <DialogFooter>
+              <DialogClose asChild>
+                <Button type="button" variant="outline" disabled={isSubmitting}>
+                  Close
+                </Button>
+              </DialogClose>
+              <Button type="submit" disabled={isSubmitting}>
+                {!isSubmitting ? 'Submit' : (
+                  <div className="flex items-center">
+                    <div role="status">
+                      <svg aria-hidden="true" className="w-4 h-4 me-2 text-gray-200 animate-spin dark:text-gray-600 fill-primary-600" viewBox="0 0 100 101" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M100 50.5908C100 78.2051 77.6142 100.591 50 100.591C22.3858 100.591 0 78.2051 0 50.5908C0 22.9766 22.3858 0.59082 50 0.59082C77.6142 0.59082 100 22.9766 100 50.5908ZM9.08144 50.5908C9.08144 73.1895 27.4013 91.5094 50 91.5094C72.5987 91.5094 90.9186 73.1895 90.9186 50.5908C90.9186 27.9921 72.5987 9.67226 50 9.67226C27.4013 9.67226 9.08144 27.9921 9.08144 50.5908Z" fill="currentColor" /><path d="M93.9676 39.0409C96.393 38.4038 97.8624 35.9116 97.0079 33.5539C95.2932 28.8227 92.871 24.3692 89.8167 20.348C85.8452 15.1192 80.8826 10.7238 75.2124 7.41289C69.5422 4.10194 63.2754 1.94025 56.7698 1.05124C51.7666 0.367541 46.6976 0.446843 41.7345 1.27873C39.2613 1.69328 37.813 4.19778 38.4501 6.62326C39.0873 9.04874 41.5694 10.4717 44.0505 10.1071C47.8511 9.54855 51.7191 9.52689 55.5402 10.0491C60.8642 10.7766 65.9928 12.5457 70.6331 15.2552C75.2735 17.9648 79.3347 21.5619 82.5849 25.841C84.9175 28.9121 86.7997 32.2913 88.1811 35.8758C89.083 38.2158 91.5421 39.6781 93.9676 39.0409Z" fill="currentFill" /></svg>
+                      <span className="sr-only">Loading...</span>
+                    </div>
+                    Adding Customer...
+                  </div>
+                )}
+              </Button>
+            </DialogFooter>
+          </form>
+        </Form>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
+export default AddCustomerDialog;
+
+
+
+
+// src\features\customers\components\CustomerForm.tsx
+import { useState } from 'react';
+import { Customer } from '@/features/customers/types/CustomerTypes';
+import { useCustomerStore } from '../hooks/useCustomerStore';
+
+interface CustomerFormProps {
+  customer?: Customer;
+  onClose: () => void;
+}
+
+const CustomerForm: React.FC<CustomerFormProps> = ({ customer, onClose }) => {
+  const { addCustomer, updateCustomer } = useCustomerStore();
+  const [formData, setFormData] = useState<Customer>(
+    customer || { id: '', name: '', email: '', address: '' }
+  );
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData({ ...formData, [name]: value });
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      if (customer && customer.id) {
+        await updateCustomer(customer.id, formData)
+      } else {
+        await addCustomer(formData);
+      }
+      onClose();
+    } catch (error) {
+      throw error
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <input
+        name="name"
+        value={formData.name}
+        onChange={handleChange}
+        placeholder="Name"
+        required
+      />
+      <input
+        name="email"
+        value={formData.email}
+        onChange={handleChange}
+        placeholder="Email"
+        required
+      />
+      <input
+        name="address"
+        value={formData.address}
+        onChange={handleChange}
+        placeholder="Address"
+        required
+      />
+      <button type="submit">{customer ? 'Update' : 'Add'} Customer</button>
+    </form>
+  );
+};
+
+export default CustomerForm;
+
+
+// src\features\customers\components\CustomerList.tsx
+// src/features/customers/components/CustomerList.tsx
+import { useEffect } from 'react';
+import { useToast } from '@/components/ui/use-toast';
+import { useCustomerStore } from '../hooks/useCustomerStore';
+import { DataTable } from '../data-table';
+import { createColumns } from './CustomerTableColoumns';
+
+const CustomerList: React.FC = () => {
+  const { customers, fetchCustomers, deleteCustomer, loading } = useCustomerStore();
+  const { toast } = useToast();
+
+  useEffect(() => {
+    fetchCustomers();
+  }, [fetchCustomers]);
+
+  const handleDelete = async (id: string) => {
+    try {
+      await deleteCustomer(id);
+      toast({
+        title: 'Customer deleted',
+        description: 'The customer was successfully deleted.',
+      });
+    } catch (error: any) {
+      console.error('Error deleting customer:', error); // Log the error message
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to delete customer.',
+      });
+    }
+  };
+
+  const columns = createColumns(handleDelete);
+
+  return (
+    <div className='w-full'>
+      {loading ? (
+        <div className="flex justify-center items-center h-96">
+          <div className="spinner-border animate-spin inline-block w-8 h-8 border-4 rounded-full text-primary"></div>
+        </div>
+      ) : (
+        <DataTable columns={columns} data={customers} />
+      )}
+    </div>
+  );
+};
+
+export default CustomerList;
+
+
+// src\features\customers\components\CustomerTableColoumns.tsx
+import { useState } from 'react';
+import { Drawer, DrawerContent, DrawerHeader, DrawerFooter, DrawerTitle, DrawerDescription, DrawerClose } from "@/components/ui/drawer";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button";
+import { ClipboardList, FilePenLine, MoreHorizontal, UserX } from "lucide-react";
+import { Customer } from "../types/CustomerTypes";
+import { useCustomerStore } from '@/features/customers/hooks/useCustomerStore';
+import { ColumnDef } from '@tanstack/react-table';
+import { CustomerEditForm } from '@/components/CustomerEditForm';
+
+// Define your columns
+export const createColumns = (handleDelete: (id: string) => void): ColumnDef<Customer>[] => [
+  {
+    accessorKey: "id",
+    header: "Customer ID",
+  },
+  {
+    accessorKey: "name",
+    header: "Name",
+  },
+  {
+    accessorKey: "email",
+    header: "Email",
+  },
+  {
+    accessorKey: "address",
+    header: "Address",
+  },
+  {
+    id: "actions",
+    cell: ({ row }) => {
+      const customer = row.original;
+      const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+      const updateCustomer = useCustomerStore((state) => state.updateCustomer);
+
+      const handleEditClick = () => {
+        setIsDrawerOpen(true);
+      };
+
+      const handleDrawerClose = () => {
+        setIsDrawerOpen(false);
+      };
+
+      const handleFormSubmit = async (data: Omit<Customer, 'id'>) => {
+        try {
+          if (customer.id) {
+            await updateCustomer(customer.id, data);
+          }
+          setIsDrawerOpen(false);
+        } catch (error) {
+          console.error("Failed to update customer:", error);
+        }
+      };
+
+      const submitForm = () => {
+        const form = document.querySelector('form');
+        if (form) {
+          form.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
+        }
+      };
+
+      return (
+        <>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" className="h-8 w-8 p-0">
+                <MoreHorizontal className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem className="flex justify-between items-center hover:cursor-pointer" onClick={() => customer.id && navigator.clipboard.writeText(customer.id)}>
+                <div className="flex">
+                  Copy ID
+                </div>
+                <div className="flex ">
+                  <ClipboardList size={16} color="#000000" />
+                </div>
+              </DropdownMenuItem>
+              <DropdownMenuItem className="flex justify-between items-center hover:cursor-pointer" onClick={handleEditClick}>
+                <div className="flex">
+                  Edit
+                </div>
+                <div className="flex ">
+                  <FilePenLine size={16} color="#000000" />
+                </div>
+              </DropdownMenuItem>
+              <DropdownMenuItem className="flex justify-between items-center hover:cursor-pointer" onClick={() => customer.id && handleDelete(customer.id)}>
+                <div className="flex">
+                  Delete
+                </div>
+                <div className="flex ">
+                  <UserX size={16} color="#e11d48" />
+                </div>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          {isDrawerOpen && (
+            <Drawer open={isDrawerOpen} onOpenChange={handleDrawerClose}>
+              <DrawerContent>
+                <DrawerHeader>
+                  <DrawerTitle>Edit Customer</DrawerTitle>
+                  <DrawerDescription>Edit customer details</DrawerDescription>
+                </DrawerHeader>
+                <CustomerEditForm customer={customer} onSubmit={handleFormSubmit} />
+                <DrawerFooter>
+                  <Button onClick={submitForm}>Save</Button>
+                  <DrawerClose asChild>
+                    <Button variant="outline" onClick={handleDrawerClose}>Cancel</Button>
+                  </DrawerClose>
+                </DrawerFooter>
+              </DrawerContent>
+            </Drawer>
+          )}
+        </>
+      );
+    },
+  },
+];
+
+
+// src\features\customers\data-table.tsx
+import {
+  ColumnDef,
+  flexRender,
+  getCoreRowModel,
+  getPaginationRowModel,
+  getSortedRowModel,
+  SortingState,
+  useReactTable,
+} from "@tanstack/react-table";
+import { useState } from "react";
+
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
+import { motion } from 'framer-motion';
+import { ArrowDownNarrowWide, ArrowUpWideNarrow } from 'lucide-react';
+
+interface DataTableProps<TData, TValue> {
+  columns: ColumnDef<TData, TValue>[];
+  data: TData[];
+}
+
+export function DataTable<TData, TValue>({
+  columns,
+  data,
+}: DataTableProps<TData, TValue>) {
+  const [sorting, setSorting] = useState<SortingState>([]);
+
+  const table = useReactTable({
+    data,
+    columns,
+    state: {
+      sorting,
+    },
+    onSortingChange: setSorting,
+    getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+  });
+
+  const variants = {
+    hidden: { opacity: 0 },
+    visible: (i: number) => ({
+      opacity: 1,
+      transition: {
+        delay: i * 0.1,
+      }
+    })
+  };
+
+  return (
+    <>
+      <div className="rounded-md border w-full overflow-x-auto">
+        <Table className="min-w-full">
+          <TableHeader>
+            {table.getHeaderGroups().map((headerGroup) => (
+              <TableRow key={headerGroup.id}>
+                {headerGroup.headers.map((header) => (
+                  <TableHead key={header.id} className="text-center sticky top-0 text-black bg-slate-100/85">
+                    {header.isPlaceholder
+                      ? null
+                      : (
+                        <div onClick={() => header.column.toggleSorting()} className={`flex pl-4 items-center ${header.column.getCanSort() ? 'hover:cursor-pointer' : ''}`}>
+                          {flexRender(header.column.columnDef.header, header.getContext())}
+                          {header.column.getIsSorted() ? (header.column.getIsSorted() === 'asc' ? <ArrowUpWideNarrow size={16} color="#F72717" strokeWidth={1.75} /> : <ArrowDownNarrowWide size={16} color="#F72717" strokeWidth={1.75} />) : ''}
+                        </div>
+                      )}
+                  </TableHead>
+                ))}
+              </TableRow>
+            ))}
+          </TableHeader>
+          <TableBody>
+            {table.getRowModel().rows?.length ? (
+              table.getRowModel().rows.map((row, index) => (
+                <motion.tr
+                  key={row.id}
+                  initial="hidden"
+                  animate="visible"
+                  custom={index}
+                  variants={variants}
+                >
+                  {row.getVisibleCells().map((cell, cellIndex) => (
+                    <TableCell key={cell.id} className={cellIndex === 0 ? 'pl-10' : 'text-left'}>
+                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                    </TableCell>
+                  ))}
+                </motion.tr>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell colSpan={columns.length} className="h-24 text-center">
+                  No results.
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      </div>
+      <div className="flex items-center justify-between py-4">
+        <div className="flex items-center space-x-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => table.previousPage()}
+            disabled={!table.getCanPreviousPage()}
+          >
+            Previous
+          </Button>
+          <Button
+            variant="default"
+            size="sm"
+            onClick={() => table.nextPage()}
+            disabled={!table.getCanNextPage()}
+          >
+            Next
+          </Button>
+        </div>
+        <div className="flex items-center space-x-2">
+          <span>Page {table.getState().pagination.pageIndex + 1} of {table.getPageCount()}</span>
+        </div>
+      </div>
+    </>
+  );
+}
+
+
+// src\features\customers\hooks\useCustomerStore.ts
+
+import { create } from 'zustand';
+import * as customerService from '@/features/customers/services/customerService';
+import { Customer } from '@/features/customers/types/CustomerTypes';
+
+interface CustomerState {
+  customers: Customer[];
+  loading: boolean;
+  fetchCustomers: () => Promise<void>;
+  addCustomer: (customer: Omit<Customer, 'id'>) => Promise<void>;
+  updateCustomer: (id: string, customer: Omit<Customer, 'id'>) => Promise<void>;
+  deleteCustomer: (id: string) => Promise<void>;
+  setCustomers: (customers: Customer[]) => void;
+  setLoading: (loading: boolean) => void;
+}
+
+export const useCustomerStore = create<CustomerState>((set) => ({
+  customers: [],
+  loading: false,
+  setLoading: (loading) => set({ loading }),
+  fetchCustomers: async () => {
+    set({ loading: true });
+    try {
+      const customers = await customerService.fetchCustomers();
+      set({ customers });
+    } catch (error) {
+      console.error('Fetch customers error:', error);
+      throw error;
+    } finally {
+      set({ loading: false });
+    }
+  },
+  addCustomer: async (customer) => {
+    try {
+      const newCustomer = await customerService.createCustomer(customer);
+      set((state) => ({ customers: [...state.customers, newCustomer] }));
+    } catch (error) {
+      console.error('Add customer error:', error);
+      throw error;
+    }
+  },
+  updateCustomer: async (id, customer) => {
+    try {
+      const updatedCustomer = await customerService.updateCustomer(id, customer);
+      set((state) => ({
+        customers: state.customers.map((c) => (c.id === id ? updatedCustomer : c)),
+      }));
+    } catch (error) {
+      console.error('Update customer error:', error);
+      throw error;
+    }
+  },
+  deleteCustomer: async (id) => {
+    try {
+      await customerService.deleteCustomer(id);
+
+      set((state) => ({
+        customers: state.customers.filter((customer) => customer.id !== id),
+      }));
+    } catch (error) {
+      console.error('Delete customer error:', error);
+      throw error;
+    }
+  },
+  setCustomers: (customers) => set({ customers }),
+}));
+
+
+// src\features\customers\index.ts
+export * from './components/CustomerList';
+export * from './components/CustomerForm';
+export * from './services/customerService';
+export * from './hooks/useCustomerStore';
+export * from './types/CustomerTypes';
+export * from './routes/CustomerRoutes'
+
+// src\features\customers\pages\CustomerPage.tsx
+// src/features/customers/pages/CustomerPage.tsx
+import CustomerList from '@/features/customers/components/CustomerList';
+import AddCustomerDialog from '../components/AddCustomerDialog';
+import Meteors from '@/components/magicui/meteors';
+
+const CustomerPage: React.FC = () => {
+  return (
+    <div className="h-screen w-screen flex overflow-x-hidden ">
+      <Meteors number={30} />
+      <div className="w-full flex flex-col items-start justify-start p-10">
+        <header className="w-full flex justify-between items-center mb-8">
+          <div className='space-y-2'>
+            <h1 className="text-3xl font-bold text-gray-800">Customer Management</h1>
+            <p className="text-gray-600">Manage your customer records efficiently.</p>
+          </div>
+          <AddCustomerDialog />
+        </header>
+        <CustomerList />
+      </div>
+    </div>
+  );
+};
+
+export default CustomerPage;
+
+
+// src\features\customers\routes\CustomerRoutes.tsx
+import React from 'react';
+import { Routes, Route } from 'react-router-dom';
+import CustomerForm from '@/features/customers/components/CustomerForm';
+import CustomerPage from '../pages/CustomerPage';
+
+const CustomerRoutes: React.FC = () => (
+  <Routes>
+    <Route path="/" element={<CustomerPage />} />
+    <Route path="/new" element={<CustomerForm onClose={() => { }} />} />
+    <Route path="/:id/edit" element={<CustomerForm onClose={() => { }} />} />
+  </Routes>
+);
+
+export default CustomerRoutes;
+
+
+// src\features\customers\services\customerService.ts
+import axiosInstance from '@/utils/axiosInstance';
+import { Customer } from '@/features/customers/types/CustomerTypes';
+import { handleApiResponse, handleError } from '@/utils/api';
+
+const API_URL = 'http://localhost:5000/customers';
+
+export const fetchCustomers = async (filters: Record<string, any> = {}): Promise<Customer[]> => {
+  try {
+    const params = new URLSearchParams(filters).toString();
+    const response = await axiosInstance.get(`${API_URL}?${params}`);
+    return response.data;
+  } catch (error) {
+    console.error('Fetch customers error:', error); // Log error for fetch
+    throw error;
+  }
+};
+
+export const createCustomer = async (customer: Customer): Promise<Customer> => {
+  try {
+    const response = await axiosInstance.post(API_URL, customer);
+    return await handleApiResponse(response);
+  } catch (error) {
+    handleError(error);
+    throw error;
+  }
+};
+
+export const updateCustomer = async (id: string, customer: Customer): Promise<Customer> => {
+  try {
+    const response = await axiosInstance.put(`${API_URL}/${id}`, customer);
+    return await handleApiResponse(response);
+  } catch (error) {
+    handleError(error);
+    throw error;
+  }
+};
+
+export const deleteCustomer = async (id: string): Promise<void> => {
+  try {
+    const response = await axiosInstance.delete(`${API_URL}/${id}`);
+    await handleApiResponse(response);
+  } catch (error) {
+
+    handleError(error);
+    throw error;
+  }
+};
+
+
+// src\features\customers\types\CustomerTypes.ts
+export interface Customer {
+  id?: string;
+  name: string;
+  email: string;
+  address: string;
+}
+
+// src\features\dashboard\DashboardPage.tsx
+// src/features/dashboard/DashboardPage.tsx
+import { Link } from 'react-router-dom';
+
+const DashboardPage: React.FC = () => {
+  return (
+    <div className="h-screen w-screen flex items-center justify-center gradient-bg">
+      <div className="bg-white shadow-lg rounded-lg p-10 max-w-2xl text-center">
+        <h1 className="text-4xl font-bold text-[#2dd4bf] mb-4">Welcome to the Customer Management System</h1>
+        <p className="text-lg text-gray-700 mb-8">
+          This system allows you to efficiently manage customer records with features to add, update, and delete customer information. Navigate to the Customer Management page to start managing your customers.
+        </p>
+        <Link to="/customers">
+          <button className="px-6 py-2 bg-[#2dd4bf] text-slate-800 font-semibold font-sans rounded-lg hover:bg-[#25bfa3] transition duration-300">
+            Go to Customer Management
+          </button>
+        </Link>
+      </div>
+    </div>
+  );
+};
+
+export default DashboardPage;
+
+
+// src\hooks\useErrorHandler.ts
+// src/hooks/useErrorHandler.ts
+import { useState } from 'react';
+
+export const useErrorHandler = () => {
+  const [error, setError] = useState<string | null>(null);
+
+  const handleError = (message: string) => {
+    setError(message);
+    console.error(message);
+  };
+
+  return {
+    error,
+    handleError,
+  };
+};
+
+
+// src\hooks\useNotification.ts
+
+
+// src\index.css
+@tailwind base;
+  @tailwind components;
+  @tailwind utilities;
+
+  @layer base {
+    :root {
+      --background: 0 0% 100%;
+      --foreground: 222.2 84% 4.9%;
+
+      --card: 0 0% 100%;
+      --card-foreground: 222.2 84% 4.9%;
+
+      --popover: 0 0% 100%;
+      --popover-foreground: 222.2 84% 4.9%;
+
+      --primary: 222.2 47.4% 11.2%;
+      --primary-foreground: 210 40% 98%;
+
+      --secondary: 210 40% 96.1%;
+      --secondary-foreground: 222.2 47.4% 11.2%;
+
+      --muted: 210 40% 96.1%;
+      --muted-foreground: 215.4 16.3% 46.9%;
+
+      --accent: 210 40% 96.1%;
+      --accent-foreground: 222.2 47.4% 11.2%;
+
+      --destructive: 0 84.2% 60.2%;
+      --destructive-foreground: 210 40% 98%;
+
+      --border: 214.3 31.8% 91.4%;
+      --input: 214.3 31.8% 91.4%;
+      --ring: 222.2 84% 4.9%;
+
+      --radius: 0.5rem;
+    }
+
+    .dark {
+      --background: 222.2 84% 4.9%;
+      --foreground: 210 40% 98%;
+
+      --card: 222.2 84% 4.9%;
+      --card-foreground: 210 40% 98%;
+
+      --popover: 222.2 84% 4.9%;
+      --popover-foreground: 210 40% 98%;
+
+      --primary: 210 40% 98%;
+      --primary-foreground: 222.2 47.4% 11.2%;
+
+      --secondary: 217.2 32.6% 17.5%;
+      --secondary-foreground: 210 40% 98%;
+
+      --muted: 217.2 32.6% 17.5%;
+      --muted-foreground: 215 20.2% 65.1%;
+
+      --accent: 217.2 32.6% 17.5%;
+      --accent-foreground: 210 40% 98%;
+
+      --destructive: 0 62.8% 30.6%;
+      --destructive-foreground: 210 40% 98%;
+
+      --border: 217.2 32.6% 17.5%;
+      --input: 217.2 32.6% 17.5%;
+      --ring: 212.7 26.8% 83.9%;
+    }
+  }
+
+  @layer base {
+    * {
+      @apply border-border;
+    }
+    body {
+      @apply bg-background text-foreground;
+    }
+  }
+
+// src\lib\utils.ts
+import { type ClassValue, clsx } from "clsx"
+import { twMerge } from "tailwind-merge"
+
+export function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs))
+}
+
+
+// src\main.tsx
+import React from 'react'
+import ReactDOM from 'react-dom/client'
+import './index.css'
+import './styles/custom.css';
+import AppRoutes from './routes/AppRoutes.tsx';
+import { Toaster } from './components/ui/toaster.tsx'
+import { ErrorProvider } from './context/ErrorContext.tsx';
+
+ReactDOM.createRoot(document.getElementById('root')!).render(
+  // <NotificationProvider>
+  <ErrorProvider>
+    <Toaster />
+    <AppRoutes />
+  </ErrorProvider>
+  // </NotificationProvider>,
+)
+
+
+// src\routes\AppRoutes.tsx
+import React, { lazy, Suspense } from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import ProtectedRoute from '@/components/ProtectedRoute';
+import NotFound from '@/components/NotFound';
+
+const AuthRoutes = lazy(() => import('@/features/auth/routes/AuthRoutes'));
+const CustomerRoutes = lazy(() => import('@/features/customers/routes/CustomerRoutes'));
+const DashboardPage = lazy(() => import('@/features/dashboard/DashboardPage'));
+
+const AppRoutes: React.FC = () => (
+  <Router>
+    <Suspense fallback={<div className="flex justify-center items-center h-96">
+      <div className="spinner-border animate-spin inline-block w-8 h-8 border-4 rounded-full text-primary"></div>
+    </div>}>
+      <Routes>
+        <Route path="/" element={<DashboardPage />} />
+        <Route path="/auth/*" element={<AuthRoutes />} />
+
+        <Route element={<ProtectedRoute />}>
+          <Route path="/customers" element={<CustomerRoutes />} />
+        </Route>
+
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+    </Suspense>
+  </Router>
+);
+
+export default AppRoutes;
+
+
+// src\services\customerService.ts
+import axiosInstance from '@/utils/axiosInstance';
+import { Customer } from '@/features/customers/types/CustomerTypes';
+import { handleApiResponse, handleError } from '@/utils/api';
+
+const API_URL = 'http://localhost:5000/customers';
+
+export const fetchCustomers = async (): Promise<Customer[]> => {
+  try {
+    const response = await axiosInstance.get(API_URL);
+    return await handleApiResponse(response);
+  } catch (error) {
+    handleError(error);
+    throw error;
+  }
+};
+
+export const createCustomer = async (customer: Omit<Customer, 'id'>): Promise<Customer> => {
+  try {
+    const response = await axiosInstance.post(API_URL, customer);
+    return await handleApiResponse(response);
+  } catch (error) {
+    handleError(error);
+    throw error;
+  }
+};
+
+export const updateCustomer = async (id: string, customer: Omit<Customer, 'id'>): Promise<Customer> => {
+  try {
+    const response = await axiosInstance.put(`${API_URL}/${id}`, customer);
+    return await handleApiResponse(response);
+  } catch (error) {
+    handleError(error);
+    throw error;
+  }
+};
+
+export const deleteCustomer = async (id: string): Promise<void> => {
+  try {
+    const response = await axiosInstance.delete(`${API_URL}/${id}`);
+    await handleApiResponse(response);
+  } catch (error) {
+    handleError(error);
+    throw error;
+  }
+};
+
+
+// src\styles\custom.css
+/* src/styles/custom.css */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@keyframes gradient {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.gradient-bg {
+  background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
+  background-size: 400% 400%;
+  animation: gradient 7s ease infinite;
+}
+
+
+// src\utils\api.ts
+import { AxiosResponse } from 'axios';
+
+export const handleApiResponse = async (response: AxiosResponse) => {
+  if (response.status !== 200 && response.status !== 201 && response.status !== 204) {
+    const errorData = response.data;
+    if (response.status === 401) {
+      throw new Error('Unauthenticated, redirecting to login.');
+    }
+    throw errorData;
+  }
+  return response.data;
+};
+
+export const handleError = (error: any) => {
+  console.log('your error is ', error);
+
+  const errorMessage = error?.response?.data?.message || error.message || 'An unknown error occurred';
+  console.error('handleError', errorMessage);
+  if (error.errors) {
+    error.errors.forEach((err: { message: string }) => {
+      console.error(err.message);
+    });
+  } else if (error instanceof Error) {
+    console.error(error.message);
+  } else {
+    console.error('An unknown error occurred.');
+  }
+};
+
+// src\utils\axiosInstance.ts
+import axios from 'axios';
+import { refreshToken } from '@/features/auth/services/authService';
+
+const axiosInstance = axios.create({
+  baseURL: 'http://localhost:5000',
+});
+
+axiosInstance.interceptors.request.use(
+  async (config) => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      config.headers['Authorization'] = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => Promise.reject(error),
+);
+
+axiosInstance.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    const originalRequest = error.config;
+    if (error.response.status === 401 && !originalRequest._retry) {
+      originalRequest._retry = true;
+      try {
+        const newToken = await refreshToken();
+        axios.defaults.headers.common['Authorization'] = `Bearer ${newToken}`;
+        return axiosInstance(originalRequest);
+      } catch (refreshError) {
+        return Promise.reject(refreshError);
+      }
+    }
+    return Promise.reject(error);
+  },
+);
+
+export default axiosInstance;
+
+
+// src\utils\httpErrorHandler.ts
+// src/utils/httpErrorHandler.ts
+import axios from 'axios';
+import { refreshToken } from '@/features/auth/services/authService';
+
+const axiosInstance = axios.create({
+  baseURL: 'http://localhost:5000',
+});
+
+axiosInstance.interceptors.request.use(
+  async (config) => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      config.headers['Authorization'] = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => Promise.reject(error),
+);
+
+axiosInstance.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    const originalRequest = error.config;
+    if (error.response.status === 401 && !originalRequest._retry) {
+      originalRequest._retry = true;
+      try {
+        const newToken = await refreshToken();
+        axios.defaults.headers.common['Authorization'] = `Bearer ${newToken}`;
+        return axiosInstance(originalRequest);
+      } catch (refreshError) {
+        return Promise.reject(refreshError);
+      }
+    }
+    return Promise.reject(error);
+  },
+);
+
+export default axiosInstance;
+
+
+// src\vite-env.d.ts
+/// <reference types="vite/client" />
+
+
+// tailwind.config.js
+/** @type {import('tailwindcss').Config} */
+module.exports = {
+  darkMode: ["class"],
+  content: [
+    './pages/**/*.{ts,tsx}',
+    './components/**/*.{ts,tsx}',
+    './app/**/*.{ts,tsx}',
+    './src/**/*.{ts,tsx}',
+  ],
+  prefix: "",
+  theme: {
+    container: {
+      center: true,
+      padding: "2rem",
+      screens: {
+        "2xl": "1400px",
+      },
+    },
+    extend: {
+      animation: {
+        meteor: "meteor 5s linear infinite",
+      },
+      keyframes: {
+        meteor: {
+          "0%": { transform: "rotate(215deg) translateX(0)", opacity: 1 },
+          "70%": { opacity: 1 },
+          "100%": {
+            transform: "rotate(215deg) translateX(-500px)",
+            opacity: 0,
+          },
+        },
+      },
+      colors: {
+        border: "hsl(var(--border))",
+        input: "hsl(var(--input))",
+        ring: "hsl(var(--ring))",
+        background: "hsl(var(--background))",
+        foreground: "hsl(var(--foreground))",
+        primary: {
+          DEFAULT: "hsl(var(--primary))",
+          foreground: "hsl(var(--primary-foreground))",
+        },
+        secondary: {
+          DEFAULT: "hsl(var(--secondary))",
+          foreground: "hsl(var(--secondary-foreground))",
+        },
+        destructive: {
+          DEFAULT: "hsl(var(--destructive))",
+          foreground: "hsl(var(--destructive-foreground))",
+        },
+        muted: {
+          DEFAULT: "hsl(var(--muted))",
+          foreground: "hsl(var(--muted-foreground))",
+        },
+        accent: {
+          DEFAULT: "hsl(var(--accent))",
+          foreground: "hsl(var(--accent-foreground))",
+        },
+        popover: {
+          DEFAULT: "hsl(var(--popover))",
+          foreground: "hsl(var(--popover-foreground))",
+        },
+        card: {
+          DEFAULT: "hsl(var(--card))",
+          foreground: "hsl(var(--card-foreground))",
+        },
+      },
+      borderRadius: {
+        lg: "var(--radius)",
+        md: "calc(var(--radius) - 2px)",
+        sm: "calc(var(--radius) - 4px)",
+      },
+      keyframes: {
+        "accordion-down": {
+          from: { height: "0" },
+          to: { height: "var(--radix-accordion-content-height)" },
+        },
+        "accordion-up": {
+          from: { height: "var(--radix-accordion-content-height)" },
+          to: { height: "0" },
+        },
+      },
+      animation: {
+        "accordion-down": "accordion-down 0.2s ease-out",
+        "accordion-up": "accordion-up 0.2s ease-out",
+      },
+    },
+  },
+  plugins: [require("tailwindcss-animate")],
+}
+
+// tsconfig.json
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "useDefineForClassFields": true,
+    "lib": [
+      "ES2020",
+      "DOM",
+      "DOM.Iterable"
+    ],
+    "module": "ESNext",
+    "skipLibCheck": true,
+    /* Bundler mode */
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": true,
+    "jsx": "react-jsx",
+    /* Linting */
+    "strict": true,
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
+    "noFallthroughCasesInSwitch": true,
+    "baseUrl": ".",
+    "paths": {
+      "@/*": [
+        "./src/*"
+      ]
+    }
+  },
+  "include": [
+    "src"
+  ],
+  "references": [
+    {
+      "path": "./tsconfig.node.json"
+    }
+  ]
+}
+
+// tsconfig.node.json
+{
+  "compilerOptions": {
+    "composite": true,
+    "skipLibCheck": true,
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "allowSyntheticDefaultImports": true,
+    "strict": true
+  },
+  "include": ["vite.config.ts"]
+}
+
+
+// vite.config.ts
+import path from "path"
+import { defineConfig } from 'vite'
+import react from '@vitejs/plugin-react'
+
+// https://vitejs.dev/config/
+export default defineConfig({
+  plugins: [react()],
+  resolve: {
+    alias: {
+      "@": path.resolve(__dirname, "./src"),
+    },
+  },
+})
+
